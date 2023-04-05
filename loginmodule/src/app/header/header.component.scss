@@ -1,0 +1,49 @@
+// @import url(./header.component.scss);
+
+.header1{
+    /* Rectangle 20614 */
+    
+    position: absolute;
+    width: 1408px;
+    height: 112px;
+    left: 16px;
+    top: 16px;
+    
+    background: #3D85C6;
+    border-radius: 8px 8px 0px 0px;
+    }
+    .card-title {
+        font-family: 'Roboto';
+        font-style: normal;
+        font-weight: 500;
+        font-size: 24px;
+        line-height: 28px;
+    
+        /* Text/Text Day */
+    
+        color: #FFFFFF;
+    
+    }
+    
+    #card-title1 {
+        position: absolute;
+        width: 162px;
+        height: 28px;
+        left: 1230px;
+        top: 40px;
+    }
+    
+    #card-title2 {
+        position: absolute;
+        width: 195px;
+        height: 28px;
+        left: 1197px;
+        top: 76px;
+    }
+    #card-image{
+        position: absolute;
+        width: 62px;
+        height: 64.27px;
+        left: 96px;
+        top: 40px;
+    }
