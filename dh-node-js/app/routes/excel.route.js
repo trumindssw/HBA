@@ -15,6 +15,7 @@ const upload = require("../middlewares/upload");
 
 module.exports = (basePath, router) => {
     console.log(`Excel ${basePath} ----- ${path} routes`);
+    console.log("hii");
     router.post(basePath + path + '/upload', upload.single('file'), responseMiddleWare(), controller.upload);  //Register new user
     router.get(basePath + path + '/tutorials', responseMiddleWare(), controller. getTutorials);           //Generate login credentials for user
     router.get(basePath + path + '/download/:fileName', responseMiddleWare(), controller.downloadTemplate);
