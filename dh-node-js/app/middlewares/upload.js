@@ -7,7 +7,7 @@ const excelFilter = (req, file, cb) => {
   ) {
     cb(null, true);
   } else {
-    cb("Please upload only excel file.", false);
+    cb("Please upload only excel file (.xlsx, .xls) ", false);
   }
 };
 
@@ -16,8 +16,14 @@ var storage = multer.diskStorage({
     cb(null, __basedir + "/app/datafiles/uploads/");
   },
   filename: (req, file, cb) => {
-    console.log(file.originalname);
-    cb(null, `${Date.now()}-${file.originalname}`);
+    console.log("QWERTYUIOP ", file)
+    if(file && file!=undefined) {
+      console.log(file.originalname);
+      cb(null, `${Date.now()}-${file.originalname}`);
+    } else {
+      cb("No file selected! Please upload a excel file.", false);
+    }
+    
   },
 });
 

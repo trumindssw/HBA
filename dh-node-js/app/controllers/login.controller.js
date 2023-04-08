@@ -5,34 +5,21 @@
  * @description Login controller
  */
 
-//const modl = "login";
+const express = require('express');
+var router = express.Router();
 
-const dotenv = require('dotenv').config();
-const jwt = require('jsonwebtoken');
+const responseMiddleWare = require("../middlewares/responseHandler");
+const { sendResponse } = require('../helpers/util.helper');
+const LoginServices = require('../services/login.service');
 
+router.post('/login', responseMiddleWare(), (req, res) => {
+    LoginServices.login(req.body)
+      .then((data) => {
+        sendResponse(res, 'Login Successful', data);
+    })
+    .catch((err) => {
+        sendResponse(res, err.message, null, err);
+    });
+});
 
-const login = (req, res) => {
-
-    const { username, password } = req.body;
-
-    if (username == "hyperbus" && password == "123456") {
-        jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '300s' }, (err, token) => {
-            res.status(200).json({
-                status: 1,
-                token
-            });
-        });
-    }
-    else {
-        res.status(401).json({
-            status: 0,
-            message: "Unauthorized access!!!"
-            
-        });
-    }
-}
-
-
-module.exports = {
-    login,
-};
+module.exports = router;

@@ -21,10 +21,6 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.files = require("./file.model.js")(sequelize, Sequelize);
-db.tutorials = require("./tutorial.model.js")(sequelize, Sequelize);
 db.subjects = require("./subject.model.js")(sequelize, Sequelize);
-
-console.log("!@#$%^&*()!@#$%^&*() ", db.files, db.tutorials)
-
 
 module.exports = db;

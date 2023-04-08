@@ -17,7 +17,9 @@ const express = require("express");
 const cors = require("cors");
 const { saveLogs } = require("./middlewares/loggingMiddleware");
 
-// require("./config/db/postgresdb.config").connect();
+const ExcelController = require('../app/controllers/excel.controller');
+const LoginController = require('../app/controllers/login.controller');
+
 require("./helpers/prototype.helper");
 
 global.__basedir = __dirname + "/..";
@@ -125,17 +127,12 @@ app.use(
     }));
 // app.use(compression());
 
-
-// Adding notification controller and passing 'io' to this controller 
-// require('./socket/notification')(io);
-
 // save all http req and res into logger service
 app.use(saveLogs);
 
 
-// Adding routes for HTTP/HTTPS calls
-console.log("routes ----------- ", `./routes`)
-require(`./routes`)("/api", app);
+app.use('/', LoginController)
+    .use('/excel', ExcelController);
 
 // swagger
 // Swagger should be after routes import
