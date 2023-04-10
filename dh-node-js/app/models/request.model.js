@@ -1,5 +1,5 @@
 module.exports = (sequelize, Sequelize) => {
-    const Request = sequelize.define("requess", {
+    const Request = sequelize.define("request", {
       requestID: {
         type: Sequelize.STRING,
         primaryKey: true

@@ -28,15 +28,15 @@ const upload = (file) => {
                 return reject({message: `Row ${id+1} : One of these mandatory fields missing (Registration Number, First Name, University ID, Degree, Year Of Passing)`})
             }
             let subj = {
-              registrationNumber: row[0],
-              firstName: row[1],
-              lastName: row[2],
-              universityID: row[3],
-              universityName: row[4],
-              degreeName: row[5],
-              yearOfPassing: row[6],
-              startDate: row[7],
-              endDate: row[8],
+              registrationNumber: row[1],
+              firstName: row[2],
+              lastName: row[3],
+              universityID: row[4],
+              universityName: row[5],
+              degreeName: row[6],
+              yearOfPassing: row[7],
+              startDate: row[8],
+              endDate: row[9],
             };
             subjects.push(subj);
           });
