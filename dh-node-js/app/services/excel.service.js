@@ -2,6 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const fileSystem = require("fs");
 const readXlsxFile = require("read-excel-file/node");
+const moment = require('moment');
 
 const dB = require('../models');
 const { validateRowData } = require('../helpers/excel.helper');
@@ -37,8 +38,12 @@ const upload = (file) => {
               yearOfPassing: row[7],
               startDate: row[8],
               endDate: row[9],
+              // startDate: moment(row[8]).format('YYYY-MM-DD'),
+              // endDate: moment(row[9]).format('YYYY-MM-DD'),
             };
             subjects.push(subj);
+            console.log("-------------------------")
+            console.log(subj);
           });
     
           Subject.bulkCreate(subjects)
