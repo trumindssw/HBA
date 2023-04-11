@@ -21,8 +21,14 @@ const sendResponse = (res, msg, data, error = null) => {
     }
   };
 
+const getNextChar = (char) => {
+  return String.fromCharCode(char.charCodeAt(0) + 1);
+}
+
+  
 module.exports = {
     deepCopy,
     isEmptyObject,
-    sendResponse
+    sendResponse,
+    getNextChar
 }
