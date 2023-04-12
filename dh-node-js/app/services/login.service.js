@@ -5,7 +5,7 @@ const login = (body) => {
         try {
             const { username, password } = body;
             if (username == "hyperbus" && password == "123456") {
-                jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '300s' }, (err, token) => {
+                jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '3000s' }, (err, token) => {
                     return resolve(token);
                 });
             }

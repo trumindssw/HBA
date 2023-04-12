@@ -2,6 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const fileSystem = require("fs");
 const readXlsxFile = require("read-excel-file/node");
+const moment = require('moment');
 
 const dB = require('../models');
 const { validateRowData } = require('../helpers/excel.helper');
@@ -28,17 +29,19 @@ const upload = (file) => {
                 return reject({message: `Row ${id+1} : One of these mandatory fields missing (Registration Number, First Name, University ID, Degree, Year Of Passing)`})
             }
             let subj = {
-              registrationNumber: row[0],
-              firstName: row[1],
-              lastName: row[2],
-              universityID: row[3],
-              universityName: row[4],
-              degreeName: row[5],
-              yearOfPassing: row[6],
-              startDate: row[7],
-              endDate: row[8],
+              regNumber: row[1],
+              firstName: row[2],
+              middleName:row[3],
+              lastName: row[4],
+              issuingAuthority: row[5],
+              department: row[6],
+              document: row[7],
+              startDate: row[8],
+              endDate: row[9],
             };
             subjects.push(subj);
+            console.log("-------------------------")
+            console.log(subj);
           });
     
           Subject.bulkCreate(subjects)

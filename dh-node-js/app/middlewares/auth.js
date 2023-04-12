@@ -3,18 +3,26 @@ const jwt = require("jsonwebtoken");
 const config = process.env;
 
 const verifyToken = (req, res, next) => {
-    const token =
-        req.body.token || req.query.token || req.headers["x-access-token"];
+    const bearerHeader = req.headers['authorization'];
+      // Check if bearer is undefined
+      if (typeof bearerHeader !== 'undefined') {
+        // Split at the space
+        const bearer = bearerHeader.split(' ');
+        // Get token from array
+        const bearerToken = bearer[1];
 
-    if (!token) {
-        return res.status(403).send("A token is required for authentication");
-    }
-    try {
-        const decoded = jwt.verify(token, config.TOKEN_KEY);
-        req.user = decoded;
-    }
-    catch (err) {
-        return res.status(401).send("Invalid Token");
+        if (!bearerToken) {
+            return res.status(403).json({message: "A token is required for authentication"});
+        }
+        try {
+            const decoded = jwt.verify(bearerToken, config.JWT_SECRET);
+            req.user = decoded;
+        }
+        catch (err) {
+            return res.status(401).json({message: "Invalid Token"});
+        }
+    } else {
+        res.status(999).json({message: 'Authentication Token Not Provided'});
     }
     return next();
 };

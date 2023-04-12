@@ -19,6 +19,7 @@ const { saveLogs } = require("./middlewares/loggingMiddleware");
 
 const ExcelController = require('../app/controllers/excel.controller');
 const LoginController = require('../app/controllers/login.controller');
+const RequestController = require('../app/controllers/request.controller');
 
 require("./helpers/prototype.helper");
 
@@ -132,7 +133,8 @@ app.use(saveLogs);
 
 
 app.use('/', LoginController)
-    .use('/excel', ExcelController);
+    .use('/excel', ExcelController)
+    .use('/request', RequestController);
 
 // swagger
 // Swagger should be after routes import

@@ -6,6 +6,7 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
     dialect: dbConfig.dialect,
     // operatorsAliases: false,
     operatorsAliases: 0,
+    schema:"hba",
 
     pool: {
         max: dbConfig.pool.max,
@@ -22,5 +23,6 @@ db.sequelize = sequelize;
 
 db.files = require("./file.model.js")(sequelize, Sequelize);
 db.subjects = require("./subject.model.js")(sequelize, Sequelize);
+db.requests = require("./request.model.js")(sequelize, Sequelize);
 
 module.exports = db;
