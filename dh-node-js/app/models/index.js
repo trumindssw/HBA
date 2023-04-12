@@ -6,6 +6,7 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
     dialect: dbConfig.dialect,
     // operatorsAliases: false,
     operatorsAliases: 0,
+    schema:"hba",
 
     pool: {
         max: dbConfig.pool.max,

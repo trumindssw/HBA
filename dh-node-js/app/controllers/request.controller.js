@@ -16,7 +16,7 @@ const verifyToken = require('../middlewares/auth');
 router.post('/verify', verifyToken, responseMiddleWare(), (req, res) => {
     RequestServices.verify(req.body)
       .then((data) => {
-        sendResponse(res, 'Verified', data);
+        sendResponse(res, 'Processed request', data);
     })
     .catch((err) => {
         sendResponse(res, err.message, null, err);

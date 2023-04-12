@@ -4,30 +4,30 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.INTEGER,
         autoIncrement: true
       },
-      registrationNumber: {
+      regNumber: {
         type: Sequelize.STRING,
         primaryKey: true
       },
       firstName: {
         type: Sequelize.STRING,
-        primaryKey: true
+        allowNull: false
+      },
+      middleName: {
+        type: Sequelize.STRING,
       },
       lastName: {
         type: Sequelize.STRING
       },
-      universityID: {
+      issuingAuthority: {
         type: Sequelize.STRING,
         primaryKey: true
       },
-      universityName: {
-        type: Sequelize.STRING
+      department: {
+        type: Sequelize.STRING,
       },
-      degreeName: {
+      document: {
         type: Sequelize.STRING,
         primaryKey: true
-      },
-      yearOfPassing: {
-        type: Sequelize.STRING
       },
       startDate: {
         type: Sequelize.DATE
