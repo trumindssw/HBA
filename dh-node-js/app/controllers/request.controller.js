@@ -23,4 +23,14 @@ router.post('/verify', verifyToken, responseMiddleWare(), (req, res) => {
     });
 });
 
+router.get('/getAllRequests', verifyToken, responseMiddleWare(), (req, res) => {
+    RequestServices.getAllRequests(req.body)
+      .then((data) => {
+        sendResponse(res, 'All the requests', data);
+    })
+    .catch((err) => {
+        sendResponse(res, err.message, null, err);
+    });
+});
+
 module.exports = router;
