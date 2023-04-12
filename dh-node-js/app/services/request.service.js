@@ -15,19 +15,19 @@ const verify = (body) => {
       arr = JSON.parse(JSON.stringify(body));
 
       var reqId = await getRequestIDFromDB();
-      for(let ind = 0; ind<arr.length; ind++) {
+      for (let ind = 0; ind < arr.length; ind++) {
         let index = arr[ind];
-        console.log('*************');
-        console.log(reqId);
-        
+        // console.log('*************');
+        // console.log(reqId);
+
         var firstName = index.firstName;
         var lastName = index.lastName;
         var issuingAuthority = index.issuingAuthority;
         var document = index.document;
         var startDate = index.startDate;
         var endDate = index.endDate;
-        
-        console.log(firstName);
+
+        // console.log(firstName);
 
         const found = await Subject.findOne({
           where: {
@@ -38,8 +38,8 @@ const verify = (body) => {
               Sequelize.where(Sequelize.fn('date', Sequelize.col('endDate')), '=', endDate)]
           }
         })
-        console.log("HIIIIIIIIIIIIII")
-        console.log(found);
+        // console.log("HIIIIIIIIIIIIII")
+        // console.log(found);
         if (found != null) {
           status = 1;
           statusMessage = "Verified";
@@ -48,8 +48,8 @@ const verify = (body) => {
           status = 0;
           statusMessage = "Not Verified";
         }
-        console.log('@@@@@@@@@@@@@@@@@@@@');
-        console.log(status)
+        // console.log('@@@@@@@@@@@@@@@@@@@@');
+        // console.log(status)
         let req = {
           requestID: reqId,
           subjectName: firstName,
@@ -58,26 +58,20 @@ const verify = (body) => {
 
         };
         request.push(req);
-        console.log("-------------------------")
-        console.log(req);
-        
+        // console.log("-------------------------")
+        // console.log(req);
         reqId = await getNextRequestID(reqId);
-        console.log('############');
-        console.log(reqId);
-
-
+        // console.log('############');
+        // console.log(reqId);
       }
-      console.log('$$$$$$$$$$$$$$$$$$$$$$')
-      console.log(request);
-      Request.bulkCreate(request).then(()=>{
+      // console.log('$$$$$$$$$$$$$$$$$$$$$$')
+      // console.log(request);
+      Request.bulkCreate(request).then(() => {
         return resolve({
           message: "Inserted the request..",
           data: request,
         });
       })
-          
-        
-
     } catch (error) {
       console.log(error);
       return reject({
@@ -86,10 +80,6 @@ const verify = (body) => {
     }
   })
 }
-
-
-
-
 
 
 // Return the next request id 
@@ -206,6 +196,31 @@ const getRequestIDFromDB = () => {
 //   })
 // }
 
+const getAllRequests = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let requests = await Request.findAll();
+      //console.log(requests);
+      if(requests){
+        return resolve({
+          message: "Previous Requests are...",
+          data: requests,
+        });
+      }else{
+        return reject({
+          message: "there are no previous requests...",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      return reject({
+        message: "Could not get the requests ",
+      });
+    }
+  })
+}
+
 module.exports = {
   verify,
+  getAllRequests,
 }
