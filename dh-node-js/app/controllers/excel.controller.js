@@ -13,8 +13,9 @@ const ExcelServices = require('../services/excel.service')
 const uploadFile = require('../middlewares/upload');
 const responseMiddleWare = require("../middlewares/responseHandler");
 const { sendResponse } = require('../helpers/util.helper');
+const verifyToken = require('../middlewares/auth');
 
-router.post('/upload', uploadFile.single('file'), responseMiddleWare(), (req, res) => {
+router.post('/upload', verifyToken, uploadFile.single('file'), responseMiddleWare(), (req, res) => {
   ExcelServices.upload(req.file)
     .then((files) => {
       sendResponse(res, 'File Uploaded', files);
@@ -24,7 +25,7 @@ router.post('/upload', uploadFile.single('file'), responseMiddleWare(), (req, re
     });
 });
 
-router.get('/getUploadedFiles', responseMiddleWare(), (req, res) => {
+router.get('/getUploadedFiles', verifyToken, responseMiddleWare(), (req, res) => {
   ExcelServices.getUploadedFiles()
     .then((files) => {
       sendResponse(res, 'List of Files Uploaded', files);
@@ -34,7 +35,7 @@ router.get('/getUploadedFiles', responseMiddleWare(), (req, res) => {
     });
 });
 
-router.post('/download/:fileName', responseMiddleWare(), (req, res) => {
+router.post('/download/:fileName', verifyToken, responseMiddleWare(), (req, res) => {
   ExcelServices.downloadTemplate(req.query, req.params, res)
     .then((files) => {
       sendResponse(res, 'Template downloaded', files);
