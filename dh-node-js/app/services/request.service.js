@@ -220,7 +220,32 @@ const getAllRequests = () => {
   })
 }
 
+const getRequestDetail = (params) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let requestDetail = await Request.findOne({ where : { requestID: params.reqId }});
+      //console.log(requests);
+      if(requestDetail){
+        return resolve({
+          message: "Request is...",
+          data: requestDetail,
+        });
+      }else{
+        return reject({
+          message: "There is no such request...",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      return reject({
+        message: "Could not get the request ",
+      });
+    }
+  })
+}
+
 module.exports = {
   verify,
   getAllRequests,
+  getRequestDetail,
 }

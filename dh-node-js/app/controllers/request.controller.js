@@ -24,9 +24,19 @@ router.post('/verify', verifyToken, responseMiddleWare(), (req, res) => {
 });
 
 router.get('/getAllRequests', verifyToken, responseMiddleWare(), (req, res) => {
-    RequestServices.getAllRequests(req.body)
+    RequestServices.getAllRequests()
       .then((data) => {
         sendResponse(res, 'All the requests', data);
+    })
+    .catch((err) => {
+        sendResponse(res, err.message, null, err);
+    });
+});
+
+router.get('/getRequestDetail/:reqId', verifyToken, responseMiddleWare(), (req, res) => {
+    RequestServices.getRequestDetail(req.params)
+      .then((data) => {
+        sendResponse(res, 'Detail of the request', data);
     })
     .catch((err) => {
         sendResponse(res, err.message, null, err);
