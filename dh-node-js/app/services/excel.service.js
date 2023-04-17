@@ -44,7 +44,9 @@ const upload = (file) => {
             console.log(subj);
           });
     
-          Subject.bulkCreate(subjects)
+          Subject.bulkCreate(
+            subjects, 
+            {updateOnDuplicate: ['firstName', 'middleName', 'lastName', 'department', 'startDate', 'endDate']})
             .then(() => {
                 // Insert file into db
                 Files.create(
@@ -98,8 +100,9 @@ const getUploadedFiles = () => {
 const downloadTemplate = (query, params, res) => {
     return new Promise(async (resolve, reject) => {
         try {
+          console.log(query)
             if(query && query.template && query.template=='true') {
-                var file = params && params.fileName + ".xlsx";
+                var file = params && params.fileName;
                 var fileLocation = path.join(__basedir, "/app/datafiles/templates/", file);
                 var stat = fileSystem.statSync(fileLocation);
                 console.log(fileLocation);
@@ -111,19 +114,20 @@ const downloadTemplate = (query, params, res) => {
                 // });
                 // var readStream = fileSystem.createReadStream(fileLocation);
                 // readStream.pipe(res);
-                resolve(data)
+                return res.status(200).send(data)
             } else {
-                Files.findOne({ where : { fileName: params.fileName + ".xlsx" }})
-                .then(rec => {
-                    console.log("Result=====> ", rec.id);
-                    resolve({
-                        data: rec.data
+                let fl = await Files.findOne({ where : { fileName: params.fileName }})
+                console.log(fl)
+                if(fl && fl!=null) {
+                    console.log("Result=====> ", fl.id);
+                    res.status(200).send({
+                        data: fl.data
                     });
-                })
+                }
             }    
         } catch (err) {
             console.log(err);
-            reject(err);
+            return reject(err);
         }
     })
 }
