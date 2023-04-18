@@ -56,14 +56,18 @@ router.get('/download/:fileName', verifyToken, (req, res) => {
           // });
           // var readStream = fileSystem.createReadStream(fileLocation);
           // readStream.pipe(res);
+          res.setHeader(
+            "Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "Content-Disposition", `attachment; filename=${file}`);
           return res.status(200).send(data)
       } else {
           Files.findOne({ where : { fileName: params.fileName }})
           .then (fl => {
             console.log("Result=====> ", fl.id);
-              res.status(200).send({
-                  data: fl.data
-              });
+            res.setHeader(
+              "Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              "Content-Disposition", `attachment; filename=${params.fileName}`);
+              res.status(200).send(fl.data);
           })
       }    
   } catch (err) {
