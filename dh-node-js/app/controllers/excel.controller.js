@@ -6,6 +6,8 @@
  */
 
 const express = require('express');
+const path = require('path');
+const fileSystem = require('fs')
 var router = express.Router();
 
 var { swagger } = require('../config/swagger/swagger.config');
@@ -48,18 +50,12 @@ router.get('/download/:fileName', verifyToken, (req, res) => {
           var fileLocation = path.join(__basedir, "/app/datafiles/templates/", file);
           var stat = fileSystem.statSync(fileLocation);
           console.log(fileLocation);
-          let data = Buffer.from(fs.readFileSync(fileLocation))
-          // res.writeHead(200, {
-          //     "Content-disposition": `attachment; filename=${file}`,
-          //     "Content-Type": "file",
-          //     "Content-Length": stat.size,
-          // });
-          // var readStream = fileSystem.createReadStream(fileLocation);
-          // readStream.pipe(res);
+          var readStream = fileSystem.createReadStream(fileLocation);
+          
           res.setHeader(
             "Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "Content-Disposition", `attachment; filename=${file}`);
-          return res.status(200).send(data)
+          readStream.pipe(res);
       } else {
           Files.findOne({ where : { fileName: params.fileName }})
           .then (fl => {

@@ -133,6 +133,7 @@ const getRequestIDFromDB = () => {
 const getAllRequests = (params) => {
   return new Promise(async (resolve, reject) => {
     try {
+      console.log(params["startDate"], params["endDate"])
       let page = parseInt(params && params["page"]) || 1,
         limit = parseInt(params && params["limit"]) || 10,
         offset = (page - 1) * limit || 0, requests;
@@ -151,12 +152,11 @@ const getAllRequests = (params) => {
       if (params && params["startDate"] && params["endDate"]) {
         let startDate = params["startDate"];
         let endDate = params["endDate"];
+        endDate = moment(endDate).add(1, 'days').format('YYYY-MM-DD')
+        console.log(startDate, endDate)
         Object.assign(condition, {
           createdAt: {
-            [Op.and]: {
-              [Op.gte]: startDate,
-              [Op.lte]: endDate
-            }
+            [Op.between]: [new Date(startDate).toISOString(), new Date(endDate).toISOString()]
           }
         });
       }
