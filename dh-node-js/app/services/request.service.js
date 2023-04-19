@@ -153,7 +153,7 @@ const getAllRequests = (params) => {
         let startDate = params["startDate"];
         let endDate = params["endDate"];
         endDate = moment(endDate).add(1, 'days').format('YYYY-MM-DD')
-        console.log(startDate, endDate)
+        console.log("***", startDate, endDate)
         Object.assign(condition, {
           createdAt: {
             [Op.between]: [new Date(startDate).toISOString(), new Date(endDate).toISOString()]

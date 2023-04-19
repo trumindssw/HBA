@@ -5,7 +5,7 @@ const readXlsxFile = require("read-excel-file/node");
 const moment = require('moment');
 
 const dB = require('../models');
-const { validateRowData } = require('../helpers/excel.helper');
+const { validateRowData, getMissingFields } = require('../helpers/excel.helper');
 const Files = dB.files;
 const Subject = dB.subjects;
 
@@ -16,34 +16,51 @@ const upload = (file) => {
           return reject({ message: "No file selected! Please upload a excel file."});
         }
         let path = __basedir + "/app/datafiles/uploads/" + file.filename;
+        let subjects = [];
+        let errorList = [];
+        let errorCount = 0;
         // Save the data in db  
-        readXlsxFile(path).then((rows) => {
+        await readXlsxFile(path).then((rows) => {
           // skip header
           rows.shift();
           if(rows && rows.length == 0) {
-            return reject({message: "File is empty!"});
+            return reject({message: "Error - File is empty!"});
           }
-          let subjects = [];
-          rows.forEach((row, id) => {
+          
+          for(let id=0; id<rows.length;id++) {
+            let row = rows[id];
             if(!validateRowData(row)) {
-                return reject({message: `Row ${id+1} : One of these mandatory fields missing (Registration Number, First Name, University ID, Degree, Year Of Passing)`})
+                if(errorCount >= 5) {
+                  return reject({message: errorList})
+                }
+                errorCount+=1;
+                let fields = getMissingFields(row);
+                let text = ``;
+                if(fields && fields.length > 0) {
+                  text = fields.join(", ")
+                }
+                errorList.push(`Error - Row ${id+1} : ${text} are missing. Please check and re-upload.`)
+                
             }
-            let subj = {
-              regNumber: row[1],
-              firstName: row[2],
-              middleName:row[3],
-              lastName: row[4],
-              issuingAuthority: row[5],
-              department: row[6],
-              document: row[7],
-              startDate: row[8],
-              endDate: row[9],
-            };
-            subjects.push(subj);
-            console.log("-------------------------")
-            console.log(subj);
-          });
-    
+            
+            if(errorCount == 0) {
+              let subj = {
+                regNumber: row[1],
+                firstName: row[2],
+                middleName:row[3],
+                lastName: row[4],
+                issuingAuthority: row[5],
+                department: row[6],
+                document: row[7],
+                startDate: row[8],
+                endDate: row[9],
+              };
+              subjects.push(subj);
+            }
+          }
+        });
+        console.log("Count: " + errorCount)
+        if(errorCount == 0) {
           Subject.bulkCreate(
             subjects, 
             {updateOnDuplicate: ['firstName', 'middleName', 'lastName', 'department', 'startDate', 'endDate']})
@@ -65,7 +82,10 @@ const upload = (file) => {
                 error: error.message,
               });
             });
-        });
+        } else {
+          console.log("@#$% Final : ", errorList , errorCount)
+          return reject({message: errorList})
+        }
       } catch (error) {
         console.log(error);
         return reject({
