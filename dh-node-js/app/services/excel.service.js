@@ -19,17 +19,20 @@ const upload = (file) => {
         let subjects = [];
         let errorList = [];
         let errorCount = 0;
+        let isFileProcessed=true;
         // Save the data in db  
         await readXlsxFile(path).then((rows) => {
           // skip header
           rows.shift();
           if(rows && rows.length == 0) {
+            isFileProcessed = false;
             return reject({message: "Error - File is empty!"});
           }
           
           for(let id=0; id<rows.length;id++) {
             let row = rows[id];
             if(!validateRowData(row)) {
+                isFileProcessed = false;
                 if(errorCount >= 5) {
                   return reject({message: errorList})
                 }
@@ -39,11 +42,11 @@ const upload = (file) => {
                 if(fields && fields.length > 0) {
                   text = fields.join(", ")
                 }
-                errorList.push(`Error - Row ${id+1} : ${text} are missing. Please check and re-upload.`)
+                errorList.push(`Error - Row ${id+1} : ${text} ${fields.length==1 ? 'is' : 'are'} missing. Please check and re-upload.`)
                 
             }
             
-            if(errorCount == 0) {
+            if(errorCount == 0 && isFileProcessed) {
               let subj = {
                 regNumber: row[1],
                 firstName: row[2],
@@ -60,7 +63,8 @@ const upload = (file) => {
           }
         });
         console.log("Count: " + errorCount)
-        if(errorCount == 0) {
+        if(errorCount == 0 && isFileProcessed) {
+          console.log("Ï am In")
           Subject.bulkCreate(
             subjects, 
             {updateOnDuplicate: ['firstName', 'middleName', 'lastName', 'department', 'startDate', 'endDate']})
@@ -98,7 +102,9 @@ const upload = (file) => {
 const getUploadedFiles = () => {
     return new Promise(async (resolve, reject) => {
         try {
-            let files = await Files.findAll();
+            let files = await Files.findAll({
+              order: [['createdAt', 'DESC']]
+            });
             let data = [];
 
             files.map((fl) => {
