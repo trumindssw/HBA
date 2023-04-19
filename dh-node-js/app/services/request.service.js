@@ -1,5 +1,6 @@
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
+const moment = require('moment');
 
 const dB = require('../models');
 const { getNextChar } = require("../helpers/util.helper");
@@ -129,20 +130,42 @@ const getRequestIDFromDB = () => {
   })
 }
 
-
 const getAllRequests = (params) => {
   return new Promise(async (resolve, reject) => {
     try {
       let page = parseInt(params && params["page"]) || 1,
         limit = parseInt(params && params["limit"]) || 10,
-        offset = (page - 1) * limit || 0;
+        offset = (page - 1) * limit || 0, requests;
 
-      let requests = await Request.findAll({
+      let condition = {};
+      if (params && params["status"]) {
+        let status = params["status"];
+        Object.assign(condition, { status: status });
+      }
+      if (params && params["lastWeek"]) {
+        Object.assign(condition, { createdAt: { [Op.gte]: moment().subtract(7, 'days').toDate() } });
+      }
+      if (params && params["lastMonth"]) {
+        Object.assign(condition, { createdAt: { [Op.gte]: moment().subtract(30, 'days').toDate() } });
+      }
+      if (params && params["startDate"] && params["endDate"]) {
+        let startDate = params["startDate"];
+        let endDate = params["endDate"];
+        Object.assign(condition, {
+          createdAt: {
+            [Op.and]: {
+              [Op.gte]: startDate,
+              [Op.lte]: endDate
+            }
+          }
+        });
+      }
+      requests = await Request.findAll({
+        where: { [Op.and]: condition },
         "page": page,
         "limit": limit,
         "offset": offset
       });
-
       if (requests) {
         return resolve({
           message: "Previous Requests are...",
