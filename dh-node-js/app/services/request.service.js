@@ -209,8 +209,27 @@ const getRequestDetail = (params) => {
   })
 }
 
+const getRequestCounts = () => {
+  return new Promise((resolve, reject) => {
+    try {
+      let response = {};
+      response.avgReqPerDay = 10;
+      response.avgReqPerWeek = 20;
+      response.totalReq = 30;
+      response.totalReqWithSubjectFound = 20;
+      response.totalReqWithMismatch = 10;
+
+      return resolve(response);
+
+    } catch (err) {
+      return reject(err);
+    }
+  })
+}
+
 module.exports = {
   verify,
   getAllRequests,
   getRequestDetail,
+  getRequestCounts
 }

@@ -43,4 +43,13 @@ router.get('/getRequestDetail/:reqId', verifyToken, responseMiddleWare(), (req, 
     });
 });
 
+router.get('/getRequestCounts', verifyToken, responseMiddleWare(), (req, res) => {
+    RequestServices.getRequestCounts()
+    .then((data) => {
+        sendResponse(res, 'Request Counts', data);
+    })
+    .catch(err => {
+        sendResponse(res, err.message, null, err);
+    })
+})
 module.exports = router;
