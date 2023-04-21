@@ -12,21 +12,5 @@ const excelFilter = (req, file, cb) => {
   }
 };
 
-var storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, __basedir + "/app/datafiles/uploads/");
-  },
-  filename: (req, file, cb) => {
-    console.log("QWERTYUIOP ", file)
-    if(file && file!=undefined) {
-      console.log(file.originalname);
-      cb(null, `${Date.now()}-${file.originalname}`);
-    } else {
-      cb("-----No file selected! Please upload a excel file.", false);
-    }
-    
-  },
-});
-
-var uploadFile = multer();
+var uploadFile = multer({fileFilter: excelFilter});
 module.exports = uploadFile;

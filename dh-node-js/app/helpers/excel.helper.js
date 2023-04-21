@@ -1,6 +1,6 @@
 const validateRowData = (row) => {
     try {
-        if(!(row[1] && row[2] && row[5] && row[7])) {
+        if(!(row.regNumber && row.firstName && row.issuingAuthority && row.document)) {
             return false;
         } else {
             return true;
@@ -13,16 +13,16 @@ const validateRowData = (row) => {
 const getMissingFields = (row) => {
     try {
         let fields = []
-        if(!row[1]) {
+        if(!row.regNumber) {
             fields.push('Reg Number');
         }
-        if(!row[2]) {
+        if(!row.firstName) {
             fields.push('First Name');
         }
-        if(!row[5]) {
+        if(!row.issuingAuthority) {
             fields.push('Issuing Authority');
         }
-        if(!row[7]) {
+        if(!row.document) {
             fields.push('Document');
         }
          return fields;
@@ -31,7 +31,37 @@ const getMissingFields = (row) => {
     }
 }
 
+const validateHeaders = (headers) => {
+    try {
+        console.log(headers)
+        let givenHeaders = [
+            'S.No', 
+            'regNumber', 
+            'firstName',
+            'middleName',
+            'lastName', 
+            'issuingAuthority', 
+            'department',
+            'document',
+            'startDate',
+            'endDate'
+        ];
+        console.log(givenHeaders.sort())
+
+        if(JSON.stringify(givenHeaders.sort()) == JSON.stringify(headers.sort())) {
+            return true;
+        }
+        else {
+            return false;
+        }
+
+    } catch (err) {
+        reject(err)
+    }
+}
+
 module.exports = {
     validateRowData,
-    getMissingFields
+    getMissingFields,
+    validateHeaders
 }
