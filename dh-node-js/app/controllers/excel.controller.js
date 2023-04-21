@@ -20,7 +20,7 @@ const dB = require('../models');
 const Files = dB.files;
 
 router.post('/upload', verifyToken, uploadFile.single('file'), responseMiddleWare(), (req, res) => {
-  console.log("!@#$%^#$%^T ", req.file)
+  console.log("!@#$%^#$%^T ", req.file);
   ExcelServices.upload(req.file)
     .then((files) => {
       sendResponse(res, 'File Uploaded !', files);

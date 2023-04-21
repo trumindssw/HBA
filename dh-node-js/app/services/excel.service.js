@@ -3,9 +3,11 @@ const path = require('path')
 const fileSystem = require("fs");
 const readXlsxFile = require("read-excel-file/node");
 const moment = require('moment');
+const xlsx = require('xlsx');
 
 const dB = require('../models');
 const { validateRowData, getMissingFields } = require('../helpers/excel.helper');
+const { log } = require('winston');
 const Files = dB.files;
 const Subject = dB.subjects;
 
@@ -21,8 +23,17 @@ const upload = (file) => {
         let errorCount = 0;
         let isFileProcessed=true;
         // Save the data in db  
-        await readXlsxFile(path).then((rows) => {
+        let chunks = [];
+        console.log('000000', file.buffer);
+          const workbook = xlsx.read(file.buffer, { type: 'buffer' }); 
+          const sheets = workbook.SheetNames; 
+          console.log('111111',sheets);
+          const temp = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]) 
+          console.log(':::',temp);
+          
+        await temp.map((rows) => {
           // skip header
+
           rows.shift();
           if(rows && rows.length == 0) {
             isFileProcessed = false;
@@ -31,6 +42,7 @@ const upload = (file) => {
           
           for(let id=0; id<rows.length;id++) {
             let row = rows[id];
+            console.log('----',row);
             if(!validateRowData(row)) {
                 isFileProcessed = false;
                 if(errorCount >= 5) {
@@ -73,7 +85,7 @@ const upload = (file) => {
                 Files.create(
                     {
                     fileName: file.filename,
-                    data: Buffer.from(fs.readFileSync(path))
+                    data: Buffer.from(fs.readFileSync(file.originalname))
                     }
                 );
                 return resolve({

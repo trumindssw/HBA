@@ -13,43 +13,58 @@ const verify = (body) => {
       var status;
       var statusMessage;
       var request = [];
-      arr = JSON.parse(JSON.stringify(body));
-
+      //check whether the req.body is empty or not
+      if (body.constructor === Object && Object.keys(body).length === 0) {
+        return reject({
+          message: "Please send subject's detail to verify...",
+        });
+      }
+      var arr = JSON.parse(JSON.stringify(body));
       var reqId = await getRequestIDFromDB();
+
       for (let ind = 0; ind < arr.length; ind++) {
         let index = arr[ind];
+        if (index) {
+          var firstName = index.firstName;
+          var lastName = index.lastName;
+          var issuingAuthority = index.issuingAuthority;
+          var document = index.document;
+          var startDate = index.startDate;
+          var endDate = index.endDate;
 
-        var firstName = index.firstName;
-        var lastName = index.lastName;
-        var issuingAuthority = index.issuingAuthority;
-        var document = index.document;
-        var startDate = index.startDate;
-        var endDate = index.endDate;
-
-        const found = await Subject.findOne({
-          where: {
-            [Op.and]:
-              [{ firstName: firstName }, { lastName: lastName }, { issuingAuthority: issuingAuthority },
-              Sequelize.where(Sequelize.fn('date', Sequelize.col('startDate')), '=', startDate),
-              { document: document },
-              Sequelize.where(Sequelize.fn('date', Sequelize.col('endDate')), '=', endDate)]
+          if (!(firstName && lastName && issuingAuthority && document && startDate && endDate)) {
+            return reject("Missing field!!");
           }
-        })
-        if (found != null) {
-          status = 1;
-          statusMessage = "Verified";
-        } else {
-          status = 0;
-          statusMessage = "Not Verified";
+          const found = await Subject.findOne({
+            where: {
+              [Op.and]:
+                [{ firstName: firstName }, { lastName: lastName }, { issuingAuthority: issuingAuthority },
+                Sequelize.where(Sequelize.fn('date', Sequelize.col('startDate')), '=', startDate),
+                { document: document },
+                Sequelize.where(Sequelize.fn('date', Sequelize.col('endDate')), '=', endDate)]
+            }
+          })
+          if (found != null) {
+            status = 1;
+            statusMessage = "Verified";
+          } else {
+            status = 0;
+            statusMessage = "Not Verified";
+          }
+          let req = {
+            requestID: reqId,
+            subjectName: firstName,
+            status: status,
+            statusMessage: statusMessage,
+          };
+          request.push(req);
+          reqId = await getNextRequestID(reqId);
         }
-        let req = {
-          requestID: reqId,
-          subjectName: firstName,
-          status: status,
-          statusMessage: statusMessage,
-        };
-        request.push(req);
-        reqId = await getNextRequestID(reqId);
+        else {
+          return reject({
+            message: "Could not verify the subject... ",
+          });
+        }
       }
       Request.bulkCreate(request).then(() => {
         return resolve({
@@ -60,7 +75,7 @@ const verify = (body) => {
     } catch (error) {
       console.log(error);
       return reject({
-        message: "Could not verify the subject... ",
+        message: "Could not verify the subject... " + error,
       });
     }
   })
@@ -70,40 +85,44 @@ const verify = (body) => {
 // Return the next request id 
 
 const getNextRequestID = (reqId) => {
-
-  try {
-    let veriflowId = process.env.VERIFLOW_ID;
-    let strLength = reqId && reqId.length;
-    let digits = parseInt(reqId.slice(strLength - 4));
-    let chars = reqId.slice(strLength - 6, strLength - 4);
-    console.log(digits, chars);
-    if (digits && digits < 9999) {
-      digits += 1;
-    } else {
-      digits = '0001';
-      let ch1 = '';
-      let ch2 = '';
-      if (chars && chars[1] < 'Z' && chars[1] >= 'A') {
-        ch1 = chars[0];
-        ch2 = getNextChar(chars[1]);
-      } else if (chars && chars[1] == 'Z') {
-        ch2 = 'A';
-        ch1 = getNextChar(chars[0]);
-      }
-      if (ch1 >= 'A' && ch1 <= 'Z' && ch2 >= 'A' && ch2 <= 'Z') {
-        chars = ch1 + ch2;
+  return new Promise((resolve, reject) => {
+    try {
+      let veriflowId = process.env.VERIFLOW_ID;
+      let strLength = reqId && reqId.length;
+      //strLength = 5
+      if (strLength > 6) {
+        let digits = parseInt(reqId.slice(strLength - 4));
+        let chars = reqId.slice(strLength - 6, strLength - 4);
+        if (digits && digits < 9999) {
+          digits += 1;
+        } else {
+          digits = '0001';
+          let ch1 = '';
+          let ch2 = '';
+          if (chars && chars[1] < 'Z' && chars[1] >= 'A') {
+            ch1 = chars[0];
+            ch2 = getNextChar(chars[1]);
+          } else if (chars && chars[1] == 'Z') {
+            ch2 = 'A';
+            ch1 = getNextChar(chars[0]);
+          }
+          if (ch1 >= 'A' && ch1 <= 'Z' && ch2 >= 'A' && ch2 <= 'Z') {
+            chars = ch1 + ch2;
+          } else {
+            return reject("RequestId limit reached!!!");
+          }
+        }
+        digits = "0".repeat(4 - digits.toString().length) + digits;
+        reqId = veriflowId + chars + digits;
+        return resolve(reqId);
       } else {
-        return reject("RequestID limit reached!")
+        return reject("Invalid RequestID");
       }
+    } catch (err) {
+      console.log(err);
     }
-    digits = "0".repeat(4 - digits.toString().length) + digits;
-    reqId = veriflowId + chars + digits;
-    return reqId;
-  } catch (err) {
-    console.log(err);
-  }
+  })
 }
-
 
 //Return the reqId from the database which is the latest
 
@@ -119,8 +138,8 @@ const getRequestIDFromDB = () => {
         requestId = requestId + veriflowId + 'AA0001';
       } else {
         requestId = request.requestID;
-        // requestId = 'DU100AA0016'
-        requestId = getNextRequestID(requestId)
+        //requestId = 'DU100ZZ9999'
+        requestId = await getNextRequestID(requestId);
       }
       resolve(requestId);
 
