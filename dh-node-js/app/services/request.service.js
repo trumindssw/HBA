@@ -234,10 +234,19 @@ const getRequestCounts = () => {
     try {
       let response = {};
       response.avgReqPerDay = 10;
+      response.avgReqPerDayvsLastWeek = -28;
+
       response.avgReqPerWeek = 20;
+      response.avgReqPerWeekvsLastWeek = -29;
+
       response.totalReq = 30;
+      response.totalReqvsLastWeek = 8;
+
       response.totalReqWithSubjectFound = 20;
+      response.totalReqWithSubjectFoundvsLastWeek = 4;
+
       response.totalReqWithMismatch = 10;
+      response.totalReqWithMismatchvsLastWeek = 11;
 
       return resolve(response);
 
