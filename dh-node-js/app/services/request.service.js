@@ -185,10 +185,11 @@ const getAllRequests = (params) => {
         "limit": limit,
         "offset": offset
       });
+      let totalCount = await Request.count();
       if (requests) {
         return resolve({
-          message: "Previous Requests are...",
           data: requests,
+          total: totalCount
         });
       } else {
         return reject({

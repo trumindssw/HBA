@@ -4,9 +4,10 @@ const fileSystem = require("fs");
 const readXlsxFile = require("read-excel-file/node");
 const moment = require('moment');
 const xlsx = require('xlsx');
+const { QueryTypes } = require('sequelize');
 
 const dB = require('../models');
-const { validateRowData, getMissingFields, validateHeaders } = require('../helpers/excel.helper');
+const { validateRowData, getMissingFields, validateHeaders, validateRowDataWithSNo, isValidDate } = require('../helpers/excel.helper');
 const { log } = require('winston');
 const Files = dB.files;
 const Subject = dB.subjects;
@@ -21,6 +22,7 @@ const upload = (file) => {
         let errorList = [];
         let errorCount = 0;
         let isFileProcessed=true;
+        const keySubjectMap = new Map()
         // Save the data in db  
 
         const workbook = xlsx.read(file.buffer, { type: 'buffer' }); 
@@ -31,7 +33,7 @@ const upload = (file) => {
         if(!validateHeaders(headers)) {
           return reject({message: "Error - Headers mismatch Sample File Format. Please check and re-upload."})
         }
-        const data = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]) 
+        const data = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {raw: false}) 
         console.log(':::', data);
 
         if(!data || (data && data.length==0)) {
@@ -41,7 +43,12 @@ const upload = (file) => {
 
         if(data && data.length > 0) {
           data.map((row, id) => {
-            if(!validateRowData(row)) {
+            let isRowProcessed = false;
+            if(validateRowDataWithSNo(row)) {
+              console.log("I came in ")
+              isRowProcessed = true;
+            }
+            if(!isRowProcessed && !validateRowData(row)) {
                 isFileProcessed = false;
                 if(errorCount >= 5) {
                   return reject({message: errorList})
@@ -52,33 +59,58 @@ const upload = (file) => {
                 if(fields && fields.length > 0) {
                   text = fields.join(", ")
                 }
-                errorList.push(`Error - Row ${id+1} : (S.No ${row['S.No']}) ${text} ${fields.length==1 ? 'is' : 'are'} missing. Please check and re-upload.`)   
+
+                let isDateValid = isValidDate(row.startDate, row.endDate);
+                console.log("@@@ ", isDateValid)
+                if(text) {
+                  errorList.push(`Error - Row ${id+1} : ${text} ${fields.length==1 ? 'is' : 'are'} missing. Please check and re-upload.`)
+                } else {
+                  if(!isDateValid) {
+                    errorList.push(`Error - Row ${id+1} : Start Date / End Date format is not of type date (MM/DD/YYYY). Please check and re-upload.`)
+                  } else {
+                    errorList.push(`Error - Row ${id+1} : Start Date greater than End Date. Please check and re-upload.`)
+                  }
+                }
+                   
             }
             
-            if(errorCount == 0 && isFileProcessed) {
-              let subj = {
-                regNumber: row.regNumber,
-                firstName: row.firstName,
-                middleName:row.middleName,
-                lastName: row.lastName,
-                issuingAuthority: row.issuingAuthority,
-                department: row.department,
-                document: row.document,
-                startDate: row.startDate,
-                endDate: row.endDate,
-              };
-              subjects.push(subj);
+            if(errorCount == 0 && isFileProcessed && !isRowProcessed) {
+              console.log("Index is $$$$$: ", id, keySubjectMap)
+              let keyArr = JSON.stringify([row.regNumber, row.issuingAuthority, row.document]);
+              if(keySubjectMap.has(keyArr)) {
+                let ind = keySubjectMap.get(keyArr);
+                subjects[ind] = row;
+              } else {
+                keySubjectMap.set(keyArr, subjects.length);
+                let subj = {
+                  regNumber: row.regNumber,
+                  firstName: row.firstName,
+                  middleName:row.middleName,
+                  lastName: row.lastName,
+                  issuingAuthority: row.issuingAuthority,
+                  department: row.department,
+                  document: row.document,
+                  startDate: row.startDate,
+                  endDate: row.endDate,
+                };
+
+                subjects.push(subj);
+              }
+              
             }
           });
-        }
-          
+        } 
         
         console.log("Count: " + errorCount)
+        console.log("Subjects: ")
+        subjects.map(s=>{
+          console.log(s)
+        })
         if(errorCount == 0 && isFileProcessed) {
           console.log("Ï am In")
           Subject.bulkCreate(
             subjects, 
-            {updateOnDuplicate: ['firstName', 'middleName', 'lastName', 'department', 'startDate', 'endDate']})
+            {updateOnDuplicate: ['firstName', 'middleName', 'lastName', 'department', 'startDate', 'endDate', 'updatedAt']})
             .then(() => {
                 // Insert file into db
                 let filename = file && file.originalname && `${Date.now()}-${file.originalname}`
@@ -95,7 +127,7 @@ const upload = (file) => {
             .catch((error) => {
               return reject({
                 message: "Fail to import data into database!",
-                error: error.message,
+                error: error.message
               });
             });
         } else {
@@ -105,7 +137,7 @@ const upload = (file) => {
       } catch (error) {
         console.log(error);
         return reject({
-          message: "Could not upload the file: " + file.originalname,
+          message: "Could not upload the file: " + file.originalname
         });
       }
     })      
@@ -115,7 +147,8 @@ const getUploadedFiles = () => {
     return new Promise(async (resolve, reject) => {
         try {
             let files = await Files.findAll({
-              order: [['createdAt', 'DESC']]
+              order: [['createdAt', 'DESC']],
+              attributes: ['fileName', 'createdAt']
             });
             let data = [];
 
