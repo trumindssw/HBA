@@ -1,14 +1,11 @@
 const fs = require('fs')
 const path = require('path')
 const fileSystem = require("fs");
-const readXlsxFile = require("read-excel-file/node");
-const moment = require('moment');
 const xlsx = require('xlsx');
-const { QueryTypes } = require('sequelize');
 
 const dB = require('../models');
 const { validateRowData, getMissingFields, validateHeaders, validateRowDataWithSNo, isValidDate } = require('../helpers/excel.helper');
-const { log } = require('winston');
+const { logger } = require('../config/logger/logger');
 const Files = dB.files;
 const Subject = dB.subjects;
 
@@ -16,8 +13,10 @@ const upload = (file) => {
     return new Promise(async (resolve, reject) => {
       try {
         if (file == undefined) {
+          logger.warn('Please upload a valid excel file (.xls, .xlsx)')
           return reject({ message: "Please upload a valid excel file (.xls, .xlsx)"});
         }
+        logger.info(`File to upload ::: ${file.originalname}`)
         let subjects = [];
         let errorList = [];
         let errorCount = 0;
@@ -31,26 +30,24 @@ const upload = (file) => {
         const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1})
         const headers = sheetData.shift();
         if(!validateHeaders(headers)) {
+          logger.error('Headers mismatch Sample File Format')
           return reject({message: "Error - Headers mismatch Sample File Format. Please check and re-upload."})
         }
         const data = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {raw: false}) 
-        console.log(':::', data);
+        logger.info('Total Data Length :::' + data.length)
 
         if(!data || (data && data.length==0)) {
           isFileProcessed = false;
+          logger.error('File is empty')
           return reject({message: "Error - File is empty!"});
         }
 
         if(data && data.length > 0) {
           data.map((row, id) => {
-            let isRowProcessed = false;
-            if(validateRowDataWithSNo(row)) {
-              console.log("I came in ")
-              isRowProcessed = true;
-            }
-            if(!isRowProcessed && !validateRowData(row)) {
+            if(!validateRowData(row)) {
                 isFileProcessed = false;
                 if(errorCount >= 5) {
+                  logger.error(`Error List ::: ${JSON.stringify(errorList)}`)
                   return reject({message: errorList})
                 }
                 errorCount+=1;
@@ -59,23 +56,23 @@ const upload = (file) => {
                 if(fields && fields.length > 0) {
                   text = fields.join(", ")
                 }
-
+                logger.info(`Row ${id+1}: Missing Fields ::: ${text}`)
                 let isDateValid = isValidDate(row.startDate, row.endDate);
-                console.log("@@@ ", isDateValid)
                 if(text) {
                   errorList.push(`Error - Row ${id+1} : ${text} ${fields.length==1 ? 'is' : 'are'} missing. Please check and re-upload.`)
                 } else {
                   if(!isDateValid) {
+                    logger.info(`Row ${id+1}: Invalid startDate /  endDate format`)
                     errorList.push(`Error - Row ${id+1} : Start Date / End Date format is not of type date (MM/DD/YYYY). Please check and re-upload.`)
                   } else {
+                    logger.info(`Row ${id+1}: startDate > endDate`)
                     errorList.push(`Error - Row ${id+1} : Start Date greater than End Date. Please check and re-upload.`)
                   }
                 }
                    
             }
             
-            if(errorCount == 0 && isFileProcessed && !isRowProcessed) {
-              console.log("Index is $$$$$: ", id, keySubjectMap)
+            if(errorCount == 0 && isFileProcessed) {
               let keyArr = JSON.stringify([row.regNumber, row.issuingAuthority, row.document]);
               if(keySubjectMap.has(keyArr)) {
                 let ind = keySubjectMap.get(keyArr);
@@ -101,41 +98,40 @@ const upload = (file) => {
           });
         } 
         
-        console.log("Count: " + errorCount)
-        console.log("Subjects: ")
-        subjects.map(s=>{
-          console.log(s)
-        })
+        logger.info(`Error Count ::: ${errorCount}`)
+        logger.info(`Subjects Data Length ::: ${subjects.length}`)
+
         if(errorCount == 0 && isFileProcessed) {
-          console.log("Ï am In")
           Subject.bulkCreate(
             subjects, 
             {updateOnDuplicate: ['firstName', 'middleName', 'lastName', 'department', 'startDate', 'endDate', 'updatedAt']})
             .then(() => {
+                logger.info('Subject Data inserted into DB successfully.')
                 // Insert file into db
                 let filename = file && file.originalname && `${Date.now()}-${file.originalname}`
-                Files.create(
-                    {
+                Files.create({
                     fileName: filename,
                     data: file.buffer
-                    }
+                  }
                 );
+                logger.info(`File ${filename} inserted into DB successfully.`)
                 return resolve({
                     message: "Uploaded the file successfully: " + file.originalname,
                 });
             })
             .catch((error) => {
+              logger.error(`Fail to import data ::: ${error.message}`)
               return reject({
                 message: "Fail to import data into database!",
                 error: error.message
               });
             });
         } else {
-          console.log("@#$% Final : ", errorList , errorCount)
+          logger.error(`Error List Data (< 5) ::: ${JSON.stringify(errorList)}`)
           return reject({message: errorList})
         }
       } catch (error) {
-        console.log(error);
+        logger.error(`Could not upload file ::: ${JSON.stringify(error)}`);
         return reject({
           message: "Could not upload the file: " + file.originalname
         });
@@ -146,24 +142,22 @@ const upload = (file) => {
 const getUploadedFiles = () => {
     return new Promise(async (resolve, reject) => {
         try {
-            let files = await Files.findAll({
+            let files = [];
+            files = await Files.findAll({
               order: [['createdAt', 'DESC']],
               attributes: ['fileName', 'createdAt']
             });
-            let data = [];
 
-            files.map((fl) => {
-                let obj = {};
-                obj.id = fl.id;
-                obj.fileName = fl.fileName;
-                obj.createdAt = fl.createdAt;
-
-                data.push(obj);
-            })
-
-            resolve(data)
+            if(files && files.length > 0 ) {
+              logger.info(`Uploaded Files Length ::: ${files.length}`)
+              resolve(files)
+            } else {
+              logger.info(`Uploaded Files Length ::: 0`)
+              resolve([]);
+            }
         } catch(err) {
-            reject({message: err.message || "Some error occurred while retrieving files."});
+          logger.info(`Error to fetch uploaded files list ::: ${err.message}`)
+          reject({message: err.message || "Some error occurred while retrieving files."});
         }
     })
 }

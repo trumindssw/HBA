@@ -13,7 +13,6 @@ const isEmptyObject = (obj) => {
 
 //sending api response with 200 status code with some msg, status, and data or error
 const sendResponse = (res, msg, data, error = null) => {
-  // console.log(msg, data, error)
     if (error) {
       res.status(error.status ? error.status : 200).json({ status: 0, message: msg, error });
     } else {

@@ -17,10 +17,11 @@ const responseMiddleWare = require("../middlewares/responseHandler");
 const { sendResponse } = require('../helpers/util.helper');
 const verifyToken = require('../middlewares/auth');
 const dB = require('../models');
+const { logger } = require('../config/logger/logger');
 const Files = dB.files;
 
 router.post('/upload', verifyToken, uploadFile.single('file'), responseMiddleWare(), (req, res) => {
-  console.log("!@#$%^#$%^T ", req.file);
+  logger.info(`Request: ${req.method} ${req.originalUrl}`)
   ExcelServices.upload(req.file)
     .then((files) => {
       sendResponse(res, 'File Uploaded !', files);
@@ -31,6 +32,7 @@ router.post('/upload', verifyToken, uploadFile.single('file'), responseMiddleWar
 });
 
 router.get('/getUploadedFiles', verifyToken, responseMiddleWare(), (req, res) => {
+  logger.info(`Request: ${req.method} ${req.originalUrl}`)
   ExcelServices.getUploadedFiles()
     .then((files) => {
       sendResponse(res, 'List of Files Uploaded', files);
@@ -41,15 +43,17 @@ router.get('/getUploadedFiles', verifyToken, responseMiddleWare(), (req, res) =>
 });
 
 router.get('/download/:fileName', verifyToken, (req, res) => {
+  logger.info(`Request: ${req.method} ${req.originalUrl}`)
   try {
       let query = req && req.query;
       let params = req && req.params;
-      console.log(query)
+      logger.info(`Request Query: ${query}`)
+      logger.info(`Request Params: ${params}`)
       if(query && query.template && query.template=='true') {
           var file = params && params.fileName;
           var fileLocation = path.join(__basedir, "/app/datafiles/templates/", file);
           var stat = fileSystem.statSync(fileLocation);
-          console.log(fileLocation);
+          logger.info(`File location: ${fileLocation}`);
           var readStream = fileSystem.createReadStream(fileLocation);
           
           res.setHeader(
@@ -59,7 +63,7 @@ router.get('/download/:fileName', verifyToken, (req, res) => {
       } else {
           Files.findOne({ where : { fileName: params.fileName }})
           .then (fl => {
-            console.log("Result=====> ", fl.id);
+            logger.info(`File Id: ${fl.id}`);
             res.setHeader(
               "Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
               "Content-Disposition", `attachment; filename=${params.fileName}`);

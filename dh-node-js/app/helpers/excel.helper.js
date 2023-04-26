@@ -1,6 +1,7 @@
+const { logger } = require("../config/logger/logger");
+
 const validateRowData = (row) => {
     try {
-        console.log(row.startDate, new Date(row.startDate), isFinite(new Date(row.startDate)))
         if(!(row.regNumber && 
             row.firstName && 
             row.issuingAuthority && 
@@ -13,19 +14,6 @@ const validateRowData = (row) => {
         }
     } catch (err) {
         console.log(err)
-    }
-}
-
-const validateRowDataWithSNo = (row) => {
-    try {
-        // console.log(row['S.No'], row.regNumber && row.firstName)
-        if(row['S.No'] && Object.keys(row).length==1) {
-            console.log("I should be in ")
-            return true;
-        }
-        return false;
-    } catch (err) {
-        console.log(err);
     }
 }
 
@@ -52,7 +40,6 @@ const getMissingFields = (row) => {
 
 const validateHeaders = (headers) => {
     try {
-        console.log(headers)
         let givenHeaders = [
             'S.No', 
             'regNumber', 
@@ -65,7 +52,6 @@ const validateHeaders = (headers) => {
             'startDate',
             'endDate'
         ];
-        console.log(givenHeaders.sort())
 
         if(JSON.stringify(givenHeaders.sort()) == JSON.stringify(headers.sort())) {
             return true;
@@ -98,6 +84,5 @@ module.exports = {
     validateRowData,
     getMissingFields,
     validateHeaders,
-    validateRowDataWithSNo,
     isValidDate
 }

@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { logger } = require("../config/logger/logger");
 
 const config = process.env;
 
@@ -12,6 +13,7 @@ const verifyToken = (req, res, next) => {
         const bearerToken = bearer[1];
 
         if (!bearerToken) {
+            logger.error('Token missing')
             return res.status(403).json({message: "A token is required for authentication"});
         }
         try {
@@ -19,9 +21,11 @@ const verifyToken = (req, res, next) => {
             req.user = decoded;
         }
         catch (err) {
+            logger.error('Invalid Token');
             return res.status(401).json({message: "Invalid Token"});
         }
     } else {
+        logger.error('Token not provided');
         res.status(999).json({message: 'Authentication Token Not Provided'});
     }
     return next();

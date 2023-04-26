@@ -4,8 +4,9 @@
  */
 
 
-const { createLogger, transports } = require("winston");
-
+const { createLogger, transports, addColors } = require("winston");
+require('winston-daily-rotate-file');
+const winston = require('winston')
 // prioritizes logging levels from 0 (highest level of severity) to 5 (lowest level of severity):
 // 0: error
 // 1: warn
@@ -18,30 +19,20 @@ const { createLogger, transports } = require("winston");
 const options = {
     file: {
         level: 'info',
-        filename: '../logs/app.log',
+        filename: '../logs/app-%DATE%.log',
+        auditFile: '../logs/audit-log.json',
         handleExceptions: true,
-        json: true,
-        maxsize: 5242880, // 5MB
+        maxSize: '1m', // 1MB
         maxFiles: 5,
-        colorize: false,
-    },
-    notification_file: {
-        level: 'error',
-        filename: '../logs/notification.log',
-        handleExceptions: true,
-        json: true,
-        maxsize: 5242880, // 5MB
-        maxFiles: 5,
-        colorize: false,
+        colorize: true
     },
     http_file: {
         level: 'error',
-        filename: '../logs/http.log',
+        filename: '../logs/http-%DATE%.log',
         handleExceptions: true,
-        json: true,
-        maxsize: 5242880, // 5MB
+        maxSize: '1m', // 5MB
         maxFiles: 5,
-        colorize: false,
+        colorize: true,
     },
     console: {
         level: 'debug',
@@ -51,19 +42,26 @@ const options = {
     },
 };
 
-// A common logger
-const logger = createLogger({
-    transports: [
-        new transports.Console(options.console),
-        new transports.File(options.file)
-    ]
+const logFormat = winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.align(),
+    winston.format.printf(
+        info => `[${info.level.toUpperCase()}] ${info.timestamp} : ${info.message}`
+     ),);
+
+let transport = new transports.DailyRotateFile(options.file);
+
+transport.on('rotate', function(oldFilename, newFilename) {
+    console.log(new Date(), oldFilename, newFilename)
 });
 
-// Creating logger for notification
-const notificationLogger = createLogger({
+
+// A common logger
+const logger = createLogger({
+    format: logFormat,
     transports: [
         new transports.Console(options.console),
-        new transports.File(options.notification_file)
+        transport
     ]
 });
 
@@ -77,6 +75,5 @@ const httpLogger = createLogger({
 
 module.exports = {
     logger,
-    notificationLogger,
     httpLogger
 };
