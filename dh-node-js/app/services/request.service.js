@@ -205,7 +205,7 @@ const getAllRequests = (params) => {
         "limit": limit,
         "offset": offset
       });
-      logger.info(`requests ::: ${request.length}`)
+      logger.info(`requests ::: ${requests.length}`)
       let totalCount = await Request.count();
       logger.info(`TotalCount ::: ${totalCount}`)
       if (requests) {
