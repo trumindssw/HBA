@@ -47,8 +47,8 @@ router.get('/download/:fileName', verifyToken, (req, res) => {
   try {
       let query = req && req.query;
       let params = req && req.params;
-      logger.info(`Request Query: ${query}`)
-      logger.info(`Request Params: ${params}`)
+      logger.info(`Request Query: ${JSOn.stringify(query)}`)
+      logger.info(`Request Params: ${JSON.stringify(params)}`)
       if(query && query.template && query.template=='true') {
           var file = params && params.fileName;
           var fileLocation = path.join(__basedir, "/app/datafiles/templates/", file);
