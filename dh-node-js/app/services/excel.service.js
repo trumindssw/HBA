@@ -4,7 +4,7 @@ const fileSystem = require("fs");
 const xlsx = require('xlsx');
 
 const dB = require('../models');
-const { validateRowData, getMissingFields, validateHeaders, validateRowDataWithSNo, isValidDate } = require('../helpers/excel.helper');
+const { validateRowData, getMissingFields, validateHeaders, isValidDate } = require('../helpers/excel.helper');
 const { logger } = require('../config/logger/logger');
 const Files = dB.files;
 const Subject = dB.subjects;

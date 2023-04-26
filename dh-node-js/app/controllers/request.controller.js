@@ -12,8 +12,10 @@ const responseMiddleWare = require("../middlewares/responseHandler");
 const { sendResponse } = require('../helpers/util.helper');
 const RequestServices = require('../services/request.service');
 const verifyToken = require('../middlewares/auth');
+const { logger } = require('../config/logger/logger');
 
 router.post('/verify', verifyToken, responseMiddleWare(), (req, res) => {
+    logger.info(`Request: ${req.method} ${req.originalUrl}`)
     RequestServices.verify(req.body)
       .then((data) => {
         sendResponse(res, 'Processed request', data);
@@ -24,6 +26,7 @@ router.post('/verify', verifyToken, responseMiddleWare(), (req, res) => {
 });
 
 router.get('/getAllRequests', verifyToken, responseMiddleWare(), (req, res) => {
+    logger.info(`Request: ${req.method} ${req.originalUrl}`)
     RequestServices.getAllRequests({...req.query})
       .then((data) => {
         sendResponse(res, 'All the requests', data);
@@ -34,6 +37,7 @@ router.get('/getAllRequests', verifyToken, responseMiddleWare(), (req, res) => {
 });
 
 router.get('/getRequestDetail/:reqId', verifyToken, responseMiddleWare(), (req, res) => {
+    logger.info(`Request: ${req.method} ${req.originalUrl}`)
     RequestServices.getRequestDetail(req.params)
       .then((data) => {
         sendResponse(res, 'Detail of the request', data);
@@ -44,6 +48,7 @@ router.get('/getRequestDetail/:reqId', verifyToken, responseMiddleWare(), (req, 
 });
 
 router.get('/getRequestCounts', verifyToken, responseMiddleWare(), (req, res) => {
+    logger.info(`Request: ${req.method} ${req.originalUrl}`)
     RequestServices.getRequestCounts()
     .then((data) => {
         sendResponse(res, 'Request Counts', data);

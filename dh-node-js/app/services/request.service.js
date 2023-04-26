@@ -4,6 +4,7 @@ const moment = require('moment');
 
 const dB = require('../models');
 const { getNextChar } = require("../helpers/util.helper");
+const { logger } = require('../config/logger/logger');
 const Subject = dB.subjects;
 const Request = dB.requests;
 
@@ -15,14 +16,18 @@ const verify = (body) => {
       var request = [];
       //check whether the req.body is empty or not
       if (body.constructor === Object && Object.keys(body).length === 0) {
+        logger.warn(`Please send subject's detail to verify`)
         return reject({
           message: "Please send subject's detail to verify...",
         });
       }
+      logger.info(`Request Body ::: ${JSON.stringify(body)}`)
       var arr = JSON.parse(JSON.stringify(body));
+      logger.info(`Requests to be processed ::: ${arr.length}`)
       var reqId = await getRequestIDFromDB();
 
       for (let ind = 0; ind < arr.length; ind++) {
+        logger.info(`Processing ::: ${reqId}`)
         let index = arr[ind];
         if (index) {
           var firstName = index.firstName;
@@ -33,6 +38,7 @@ const verify = (body) => {
           var endDate = index.endDate;
 
           if (!(firstName && lastName && issuingAuthority && document && startDate && endDate)) {
+            logger.error(`Missing field in the request`)
             return reject("Missing field!!");
           }
           const found = await Subject.findOne({
@@ -47,9 +53,11 @@ const verify = (body) => {
           if (found != null) {
             status = 1;
             statusMessage = "Verified";
+            logger.info(`Subject is verified`)
           } else {
             status = 0;
             statusMessage = "Not Verified";
+            logger.info(`Subject is not verified`)
           }
           let req = {
             requestID: reqId,
@@ -61,12 +69,14 @@ const verify = (body) => {
           reqId = await getNextRequestID(reqId);
         }
         else {
+          logger.error(`Error in request ${reqId}`)
           return reject({
-            message: "Could not verify the subject... ",
+            message: "Error in request" + reqId,
           });
         }
       }
       Request.bulkCreate(request).then(() => {
+        logger.info(`Inserted the requests in db successfully`)
         return resolve({
           message: "Inserted the request..",
           data: request,
@@ -74,6 +84,7 @@ const verify = (body) => {
       })
     } catch (error) {
       console.log(error);
+      logger.error(`Could not verify the subject`)
       return reject({
         message: "Could not verify the subject... " + error,
       });
@@ -87,7 +98,9 @@ const verify = (body) => {
 const getNextRequestID = (reqId) => {
   return new Promise((resolve, reject) => {
     try {
+      logger.info(`::: Inside getNextRequestID :::`)
       let veriflowId = process.env.VERIFLOW_ID;
+      logger.info(`VeriflowId ::: ${veriflowId}`)
       let strLength = reqId && reqId.length;
       //strLength = 5
       if (strLength > 6) {
@@ -109,16 +122,20 @@ const getNextRequestID = (reqId) => {
           if (ch1 >= 'A' && ch1 <= 'Z' && ch2 >= 'A' && ch2 <= 'Z') {
             chars = ch1 + ch2;
           } else {
+            logger.error(`RequestId limit reached`)
             return reject("RequestId limit reached!!!");
           }
         }
         digits = "0".repeat(4 - digits.toString().length) + digits;
         reqId = veriflowId + chars + digits;
+        logger.info(`Next RequestId ::: ${reqId}`)
         return resolve(reqId);
       } else {
+        logger.error(`Invalid RequestID`)
         return reject("Invalid RequestID");
       }
     } catch (err) {
+      logger.error(`Error ::: ${err}`)
       console.log(err);
     }
   })
@@ -129,6 +146,7 @@ const getNextRequestID = (reqId) => {
 const getRequestIDFromDB = () => {
   return new Promise(async (resolve, reject) => {
     try {
+      logger.info(`::: Inside getRequestIDFromDB :::`)
       let veriflowId = process.env.VERIFLOW_ID;
       let requestId = '';
       const request = await Request.findOne({
@@ -141,9 +159,11 @@ const getRequestIDFromDB = () => {
         //requestId = 'DU100ZZ9999'
         requestId = await getNextRequestID(requestId);
       }
+      logger.info(`RequestId ::: ${requestId}`)
       resolve(requestId);
 
     } catch (err) {
+      logger.error(`Error ::: ${err}`)
       reject(err)
     }
   })
@@ -152,11 +172,11 @@ const getRequestIDFromDB = () => {
 const getAllRequests = (params) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log(params["startDate"], params["endDate"])
+      logger.info(`Params ::: ${JSON.stringify(params)}`)
       let page = parseInt(params && params["page"]) || 1,
         limit = parseInt(params && params["limit"]) || 10,
         offset = (page - 1) * limit || 0, requests;
-
+      logger.info(`Page ::: ${page} ; Limit ::: ${limit} ; Offset ::: ${offset}`);
       let condition = {};
       if (params && params["status"]) {
         let status = params["status"];
@@ -172,7 +192,7 @@ const getAllRequests = (params) => {
         let startDate = params["startDate"];
         let endDate = params["endDate"];
         endDate = moment(endDate).add(1, 'days').format('YYYY-MM-DD')
-        console.log("***", startDate, endDate)
+        logger.info(`Requests from ${startDate} to ${endDate}`)
         Object.assign(condition, {
           createdAt: {
             [Op.between]: [new Date(startDate).toISOString(), new Date(endDate).toISOString()]
@@ -185,19 +205,22 @@ const getAllRequests = (params) => {
         "limit": limit,
         "offset": offset
       });
+      logger.info(`requests ::: ${request.length}`)
       let totalCount = await Request.count();
+      logger.info(`TotalCount ::: ${totalCount}`)
       if (requests) {
         return resolve({
           data: requests,
           total: totalCount
         });
       } else {
+        logger.info(`There are no previous requests`);
         return reject({
           message: "there are no previous requests...",
         });
       }
     } catch (error) {
-      console.log(error);
+      logger.error(`Could not get the requests ${error}`)
       return reject({
         message: "Could not get the requests ",
       });
@@ -209,19 +232,22 @@ const getAllRequests = (params) => {
 const getRequestDetail = (params) => {
   return new Promise(async (resolve, reject) => {
     try {
+      logger.info(`Params ::: ${params.reqId}`)
       let requestDetail = await Request.findOne({ where: { requestID: params.reqId } });
+      logger.info(`Request ::: ${JSON.stringify(requestDetail)}`)
       if (requestDetail) {
         return resolve({
           message: "Request is...",
           data: requestDetail,
         });
       } else {
+        logger.error(`No request with reqId ::: ${reqId}`)
         return reject({
           message: "There is no such request...",
         });
       }
     } catch (error) {
-      console.log(error);
+      logger.error(`Could not get the requests ${error}`)
       return reject({
         message: "Could not get the request ",
       });
@@ -247,7 +273,7 @@ const getRequestCounts = () => {
 
       response.totalReqWithMismatch = 10;
       response.totalReqWithMismatchvsLastWeek = 11;
-
+      logger.info(`response ::: ${response}`)
       return resolve(response);
 
     } catch (err) {
