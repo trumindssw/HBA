@@ -29,6 +29,7 @@ const options = {
     http_file: {
         level: 'error',
         filename: '../logs/http-%DATE%.log',
+        auditFile: '../logs/audit-http-log.json',
         handleExceptions: true,
         maxSize: '1m', // 5MB
         maxFiles: 5,
@@ -49,9 +50,14 @@ const logFormat = winston.format.combine(
         info => `[${info.level.toUpperCase()}] ${info.timestamp} : ${info.message}`
      ),);
 
-let transport = new transports.DailyRotateFile(options.file);
+let transportFile = new transports.DailyRotateFile(options.file);
+let transportHttpFile = new transports.DailyRotateFile(options.http_file);
 
-transport.on('rotate', function(oldFilename, newFilename) {
+transportFile.on('rotate', function(oldFilename, newFilename) {
+    console.log(new Date(), oldFilename, newFilename)
+});
+
+transportHttpFile.on('rotate', function(oldFilename, newFilename) {
     console.log(new Date(), oldFilename, newFilename)
 });
 
@@ -61,15 +67,16 @@ const logger = createLogger({
     format: logFormat,
     transports: [
         new transports.Console(options.console),
-        transport
+        transportFile
     ]
 });
 
 // Creating logger for http calls
 const httpLogger = createLogger({
+    format: logFormat,
     transports: [
         new transports.Console(options.console),
-        new transports.File(options.http_file)
+        transportHttpFile
     ]
 });
 
