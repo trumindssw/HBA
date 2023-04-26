@@ -129,7 +129,7 @@ app.use(
 // app.use(compression());
 
 // save all http req and res into logger service
-app.use(saveLogs);
+// app.use(saveLogs);
 
 
 app.use('/', LoginController)
