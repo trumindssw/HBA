@@ -4,8 +4,26 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.STRING,
         primaryKey: true
       },
+      veriflowID: {
+        type: Sequelize.STRING
+      },
       subjectName: {
         type: Sequelize.STRING
+      },
+      issuingAuthority: {
+        type: Sequelize.STRING
+      },
+      document: {
+        type: Sequelize.STRING
+      },
+      department: {
+        type: Sequelize.STRING
+      },
+      startDate: {
+        type: Sequelize.DATE
+      },
+      endDate: {
+        type: Sequelize.DATE
       },
       status: {
         type: Sequelize.INTEGER
