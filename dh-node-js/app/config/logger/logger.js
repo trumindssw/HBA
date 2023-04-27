@@ -18,9 +18,10 @@ const winston = require('winston')
 
 const options = {
     file: {
-        level: 'info',
+        level: 'debug',
         filename: '../logs/app-%DATE%.log',
         auditFile: '../logs/audit-log.json',
+        datePattern: 'YYYY-MM',
         handleExceptions: true,
         maxSize: '1m', // 1MB
         maxFiles: 5,
@@ -30,8 +31,9 @@ const options = {
         level: 'error',
         filename: '../logs/http-%DATE%.log',
         auditFile: '../logs/audit-http-log.json',
+        datePattern: 'YYYY-MM',
         handleExceptions: true,
-        maxSize: '1m', // 5MB
+        maxSize: '1m', // 1MB
         maxFiles: 5,
         colorize: true,
     },

@@ -4,11 +4,11 @@ const { logger } = require('../config/logger/logger');
 const login = (body) => {
     return new Promise(async (resolve, reject) => {
         try {
-            logger.info('Inside login service')
+            logger.debug('Inside login service')
             const { username, password } = body;
             if (username == "hyperbus" && password == "123456") {
                 jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '3000s' }, (err, token) => {
-                    logger.info(`User ${username} logged in`)
+                    logger.debug(`User ${username} logged in`)
                     return resolve({token, status: 200});
                 });
             }
