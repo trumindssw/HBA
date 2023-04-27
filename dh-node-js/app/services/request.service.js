@@ -7,6 +7,8 @@ const { getNextChar } = require("../helpers/util.helper");
 const { logger } = require('../config/logger/logger');
 const Subject = dB.subjects;
 const Request = dB.requests;
+let veriflowId = process.env.VERIFLOW_ID;
+
 
 const verify = (body) => {
   return new Promise(async (resolve, reject) => {
@@ -34,19 +36,23 @@ const verify = (body) => {
           var lastName = index.lastName;
           var issuingAuthority = index.issuingAuthority;
           var document = index.document;
+          var department = index.department;
           var startDate = index.startDate;
           var endDate = index.endDate;
 
-          if (!(firstName && lastName && issuingAuthority && document && startDate && endDate)) {
+          if (!(firstName && lastName && issuingAuthority && document && department && startDate && endDate)) {
             logger.error(`Missing field in the request`)
             return reject("Missing field!!");
           }
           const found = await Subject.findOne({
             where: {
               [Op.and]:
-                [{ firstName: firstName }, { lastName: lastName }, { issuingAuthority: issuingAuthority },
+                [Sequelize.where(Sequelize.fn('lower', Sequelize.col('firstName')), '=', firstName.toLowerCase()),
+                Sequelize.where(Sequelize.fn('lower', Sequelize.col('lastName')), '=', lastName.toLowerCase()),
+                Sequelize.where(Sequelize.fn('lower', Sequelize.col('issuingAuthority')), '=', issuingAuthority.toLowerCase()),
+                Sequelize.where(Sequelize.fn('lower', Sequelize.col('document')), '=', document.toLowerCase()),
+                Sequelize.where(Sequelize.fn('lower', Sequelize.col('department')), '=', department.toLowerCase()),
                 Sequelize.where(Sequelize.fn('date', Sequelize.col('startDate')), '=', startDate),
-                { document: document },
                 Sequelize.where(Sequelize.fn('date', Sequelize.col('endDate')), '=', endDate)]
             }
           })
@@ -61,7 +67,13 @@ const verify = (body) => {
           }
           let req = {
             requestID: reqId,
-            subjectName: firstName,
+            veriflowID: veriflowId,
+            subjectName: firstName + " " + lastName,
+            issuingAuthority: issuingAuthority,
+            document: document,
+            department: department,
+            startDate: startDate,
+            endDate: endDate,
             status: status,
             statusMessage: statusMessage,
           };
@@ -99,7 +111,6 @@ const getNextRequestID = (reqId) => {
   return new Promise((resolve, reject) => {
     try {
       logger.info(`::: Inside getNextRequestID :::`)
-      let veriflowId = process.env.VERIFLOW_ID;
       logger.info(`VeriflowId ::: ${veriflowId}`)
       let strLength = reqId && reqId.length;
       //strLength = 5
@@ -147,7 +158,6 @@ const getRequestIDFromDB = () => {
   return new Promise(async (resolve, reject) => {
     try {
       logger.info(`::: Inside getRequestIDFromDB :::`)
-      let veriflowId = process.env.VERIFLOW_ID;
       let requestId = '';
       const request = await Request.findOne({
         order: [['requestID', 'DESC']]
@@ -232,15 +242,20 @@ const getAllRequests = (params) => {
 const getRequestDetail = (params) => {
   return new Promise(async (resolve, reject) => {
     try {
+      let requestDetail = [];
       logger.info(`Params ::: ${params.reqId}`)
-      let requestDetail = await Request.findOne({ where: { requestID: params.reqId } });
-      logger.info(`Request ::: ${JSON.stringify(requestDetail)}`)
-      if (requestDetail) {
+      let requestStatus = await Request.findOne({ where: { requestID: params.reqId } });
+      logger.info(`Request ::: ${JSON.stringify(requestStatus)}`)
+      if (requestStatus) {
+        for (var key in requestStatus.dataValues) {
+          requestDetail.push({ "key": key, "value": requestStatus[key], "checked": requestStatus.status })
+        }
         return resolve({
           message: "Request is...",
           data: requestDetail,
         });
-      } else {
+      }
+      else {
         logger.error(`No request with reqId ::: ${reqId}`)
         return reject({
           message: "There is no such request...",
