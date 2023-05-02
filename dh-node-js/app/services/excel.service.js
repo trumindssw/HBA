@@ -63,7 +63,7 @@ const upload = (file) => {
                 } else {
                   if(!isDateValid) {
                     logger.info(`Row ${id+1}: Invalid startDate /  endDate format`)
-                    errorList.push(`Error - Row ${id+1} : Start Date / End Date format is not of type date (MM/DD/YYYY). Please check and re-upload.`)
+                    errorList.push(`Error - Row ${id+1} : Start / End Date is missing or format is not of type date (MM/DD/YYYY). Please check and re-upload.`)
                   } else {
                     logger.info(`Row ${id+1}: startDate > endDate`)
                     errorList.push(`Error - Row ${id+1} : Start Date greater than End Date. Please check and re-upload.`)

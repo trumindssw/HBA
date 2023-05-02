@@ -281,6 +281,8 @@ const getRequestCounts = () => {
   return new Promise((resolve, reject) => {
     try {
       let response = {};
+      let avgReqPerDayQuery = `
+      SELECT (COUNT(*)::float)/(MAX("createdAt"::date)-min("createdAt"::date)+1) FROM hba.requests`;
       response.avgReqPerDay = 10;
       response.avgReqPerDayvsLastWeek = -28;
 
