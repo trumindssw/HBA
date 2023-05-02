@@ -229,13 +229,21 @@ const getAllRequests = (params) => {
 }
 
 
-const getRequestDetail = (params) => {
+const getRequestDetail = (query) => {
   return new Promise(async (resolve, reject) => {
     try {
+      console.log(query)
+      if(!query || !query.reqId ) {
+        logger.info(`Request ID is not defined or null`)
+        return reject({
+          message: "Request ID is undefined or null",
+        });
+      }
+      let reqId = query.reqId;
       let requestDetail = [];
-      logger.info(`Params ::: ${params.reqId}`)
+      logger.info(`Params ::: ${reqId}`)
       let requestStatus = await Request.findOne({
-        where: { requestID: params.reqId }, attributes: ['requestID', 'veriflowID', 'subjectName',
+        where: { requestID: reqId }, attributes: ['requestID', 'veriflowID', 'subjectName',
           'issuingAuthority', 'document', 'department', [Sequelize.literal('extract(YEAR FROM "startDate")'), 'startYear'],
           [Sequelize.literal('extract(YEAR FROM "endDate")'), 'endYear'], 'status']
       });

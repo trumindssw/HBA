@@ -36,9 +36,9 @@ router.get('/getAllRequests', verifyToken, responseMiddleWare(), (req, res) => {
     });
 });
 
-router.get('/getRequestDetail/:reqId', verifyToken, responseMiddleWare(), (req, res) => {
+router.get('/getRequestDetail', verifyToken, responseMiddleWare(), (req, res) => {
     logger.info(`Request: ${req.method} ${req.originalUrl}`)
-    RequestServices.getRequestDetail(req.params)
+    RequestServices.getRequestDetail(req.query)
       .then((data) => {
         sendResponse(res, 'Detail of the request', data);
     })
