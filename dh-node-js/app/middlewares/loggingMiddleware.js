@@ -75,9 +75,9 @@ const saveLogs = (req, res, next) => {
             loggingData["level"] = "error";
         }
 
-        if (path !== "/health-check") {
-            sendLogs(loggingData);
-        }
+        // if (path !== "/health-check") {
+        //     sendLogs(loggingData);
+        // }
 
         oldEnd.apply(res, arguments);
     };

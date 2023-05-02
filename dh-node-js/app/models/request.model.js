@@ -25,6 +25,9 @@ module.exports = (sequelize, Sequelize) => {
       endDate: {
         type: Sequelize.DATE
       },
+      statusCode: {
+        type: Sequelize.INTEGER
+      },
       status: {
         type: Sequelize.INTEGER
       },

@@ -41,7 +41,6 @@ const getMissingFields = (row) => {
 const validateHeaders = (headers) => {
     try {
         let givenHeaders = [
-            'S.No', 
             'regNumber', 
             'firstName',
             'middleName',
