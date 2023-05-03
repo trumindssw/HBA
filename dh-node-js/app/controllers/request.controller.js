@@ -25,9 +25,9 @@ router.post('/verify', verifyToken, responseMiddleWare(), (req, res) => {
     });
 });
 
-router.get('/getAllRequests', verifyToken, responseMiddleWare(), (req, res) => {
+router.post('/getAllRequests', verifyToken, responseMiddleWare(), (req, res) => {
     logger.info(`Request: ${req.method} ${req.originalUrl}`)
-    RequestServices.getAllRequests({...req.query})
+    RequestServices.getAllRequests(req.body)
       .then((data) => {
         sendResponse(res, 'All the requests', data);
     })

@@ -171,39 +171,58 @@ const getRequestIDFromDB = () => {
   })
 }
 
-const getAllRequests = (params) => {
+const getAllRequests = (body) => {
   return new Promise(async (resolve, reject) => {
     try {
-      logger.info(`Params ::: ${JSON.stringify(params)}`)
-      let page = parseInt(params && params["page"]) || 1,
-        limit = parseInt(params && params["limit"]) || 10,
-        offset = (page - 1) * limit || 0, requests;
+      logger.info(`Body ::: ${JSON.stringify(body)}`)
+  
+      let page = body && body.page && Number(body.page) || 1;
+      let limit = body && body.limit && Number(body.limit) || 10;
+      let status = body && body.status && Number(body.status);
+      let lastWeek = body && body.lastWeek;
+      let lastMonth = body && body.lastMonth;
+      let startDate = body && body.startDate;
+      let endDate = body && body.endDate;
+      let searchValue = body && body.searchValue;
+      let sortKey = body && body.sortKey || 'createdAt';
+      let sortValue = body && body.sortValue || 'DESC';
+      let offset = (page - 1) * limit || 0, requests;
+     
       logger.info(`Page ::: ${page} ; Limit ::: ${limit} ; Offset ::: ${offset}`);
-      let condition = {};
-      if (params && params["status"]) {
-        let status = params["status"];
-        condition.status = status;
+      let condition = [];
+      if (status != null) {
+        condition.push({"status" : status});
       }
-      if (params && params["lastWeek"]) {
-        condition.createdAt = { [Op.gte]: moment().subtract(7, 'days').toDate() }
+      if (lastWeek) {
+        condition.push({"createdAt" : { [Op.gte]: moment().subtract(7, 'days').toDate() }});
       }
-      if (params && params["lastMonth"]) {
-        condition.createdAt = { [Op.gte]: moment().subtract(30, 'days').toDate() }
+      if (lastMonth) {
+        condition.push({"createdAt" : { [Op.gte]: moment().subtract(30, 'days').toDate() }});
       }
-      if (params && params["startDate"] && params["endDate"]) {
-        let startDate = params["startDate"];
-        let endDate = params["endDate"];
+      if (startDate && endDate) {
         endDate = moment(endDate).add(1, 'days').format('YYYY-MM-DD')
         logger.info(`Requests from ${startDate} to ${endDate}`)
-        condition.createdAt = { [Op.between]: [new Date(startDate).toISOString(), new Date(endDate).toISOString()] }
+        condition.push({"createdAt" : { [Op.between]: [new Date(startDate).toISOString(), new Date(endDate).toISOString()] }});
       }
-
+      let input = []
+      if(searchValue){
+        input.push({"subjectName" :  {
+          [Sequelize.Op.iLike]: `%${searchValue}%`
+        }});
+        input.push({"statusMessage" :  {
+          [Sequelize.Op.iLike]: `%${searchValue}%`
+        }});
+        input.push({"requestID" :  {
+          [Sequelize.Op.iLike]: `%${searchValue}%`
+        }});
+        condition.push({[Op.or] : input});
+      }
       requests = await Request.findAll({
-        where: { [Op.and]: condition },
-        order: [['createdAt', 'DESC']],
+        where: { [Op.and] : condition } ,
+        order: [[sortKey, sortValue]],
         "page": page,
         "limit": limit,
-        "offset": offset
+        "offset": offset,
       });
       logger.info(`requests ::: ${requests.length}`)
       let totalCount = await Request.count();
