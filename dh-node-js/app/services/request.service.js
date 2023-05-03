@@ -1,4 +1,5 @@
 const Sequelize = require("sequelize");
+const { QueryTypes } = require('sequelize');
 const Op = Sequelize.Op;
 const moment = require('moment');
 
@@ -171,6 +172,7 @@ const getRequestIDFromDB = () => {
   })
 }
 
+
 const getAllRequests = (body) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -218,14 +220,17 @@ const getAllRequests = (body) => {
         condition.push({[Op.or] : input});
       }
       requests = await Request.findAll({
+        attributes: ["requestID", "subjectName", "createdAt", "statusCode", "statusMessage", "status"],
         where: { [Op.and] : condition } ,
         order: [[sortKey, sortValue]],
         "page": page,
         "limit": limit,
         "offset": offset,
       });
-      logger.info(`requests ::: ${requests.length}`)
-      let totalCount = await Request.count();
+      logger.info(`Requests Count ::: ${requests.length}`)
+      let totalCount = await Request.count({
+        where: { [Op.and] : condition }
+      });
       logger.info(`TotalCount ::: ${totalCount}`)
       if (requests) {
         return resolve({
@@ -305,25 +310,91 @@ const getRequestDetail = (query) => {
 }
 
 const getRequestCounts = () => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
       let response = {};
-      let avgReqPerDayQuery = `
-      SELECT (COUNT(*)::float)/(MAX("createdAt"::date)-min("createdAt"::date)+1) FROM hba.requests`;
-      response.avgReqPerDay = 10;
-      response.avgReqPerDayvsLastWeek = -28;
+      let countQuery = `
+      SELECT 
+      (COUNT(*)::float)/(MAX("createdAt"::date) - min("createdAt"::date)) as "avgReqPerDay",
+      (COUNT(*)::float)/((EXTRACT('DAYS' from (DATE_TRUNC('week', max("createdAt"::date)) - DATE_TRUNC('week', min("createdAt"::date))))::integer)/7 + 1) as "avgReqPerWeek",
+      COUNT(*)::integer as "totalReq",
+      COUNT(CASE WHEN "status"=1 THEN "requestID" END)::integer as "totalReqWithSubjectFound",
+      COUNT(CASE WHEN "status"=0 OR "status"=-1 THEN "requestID" END)::integer as "totalReqWithMismatch" 
+      FROM hba.requests;`;
 
-      response.avgReqPerWeek = 20;
-      response.avgReqPerWeekvsLastWeek = -29;
+      let countQueryvsLastWeek = `
+      SELECT 
+      CASE 
+        WHEN "prevWeekRequestCount" = 0 THEN '-' 
+        ELSE ((("thisWeekRequestCount" - "prevWeekRequestCount")/"prevWeekRequestCount") * 100 )::text
+        END as "avgVsLastWeekPerc",
+      CASE 
+        WHEN "prevWeekRequestCountWithSubjectFound" = 0 THEN '-' 
+        ELSE ((("thisWeekRequestCountWithSubjectFound" - "prevWeekRequestCountWithSubjectFound")/"prevWeekRequestCountWithSubjectFound") * 100 )::text
+        END as "totalReqWithSubjectFoundvsLastWeek",
+      CASE 
+        WHEN "prevWeekRequestCountWithMismatch" = 0 THEN '-' 
+        ELSE ((("thisWeekRequestCountWithMismatch" - "prevWeekRequestCountWithMismatch")/"prevWeekRequestCountWithMismatch") * 100 )::text
+        END as "totalReqWithMismatchvsLastWeek"
+      FROM 
+      (SELECT 
+      COUNT(
+        CASE WHEN "createdAt" BETWEEN 
+        DATE_TRUNC('week', NOW()) - interval '7 day' 
+        AND DATE_TRUNC('week', NOW()) 
+        THEN "requestID" 
+        END) as "prevWeekRequestCount",
+      COUNT(
+        CASE WHEN "status"=1 AND "createdAt" BETWEEN 
+        DATE_TRUNC('week', NOW()) - interval '7 day' 
+        AND DATE_TRUNC('week', NOW()) 
+        THEN "requestID" 
+        END) as "prevWeekRequestCountWithSubjectFound",
+      COUNT(
+        CASE WHEN ("status" IN (0,-1)) AND "createdAt" BETWEEN 
+        DATE_TRUNC('week', NOW()) - interval '7 day' 
+        AND DATE_TRUNC('week', NOW()) 
+        THEN "requestID" 
+        END) as "prevWeekRequestCountWithMismatch",
+      COUNT(
+        CASE WHEN "createdAt" BETWEEN 
+        DATE_TRUNC('week', NOW())
+        AND DATE_TRUNC('week', NOW()) + interval '7 day' 
+        THEN "requestID" 
+        END) as "thisWeekRequestCount",
+      COUNT(
+        CASE WHEN "status"=1 AND "createdAt" BETWEEN 
+        DATE_TRUNC('week', NOW())
+        AND DATE_TRUNC('week', NOW()) + interval '7 day' 
+        THEN "requestID" 
+        END) as "thisWeekRequestCountWithSubjectFound",
+      COUNT(
+        CASE WHEN ("status" IN (0,-1)) AND "createdAt" BETWEEN 
+        DATE_TRUNC('week', NOW())
+        AND DATE_TRUNC('week', NOW()) + interval '7 day' 
+        THEN "requestID" 
+        END) as "thisWeekRequestCountWithMismatch"
+      FROM "public"."requests") as foo`;
 
-      response.totalReq = 30;
-      response.totalReqvsLastWeek = 8;
+      let countRes = await dB.sequelize.query(countQuery, { type: QueryTypes.SELECT });
+      let countResvsLastWeek = await dB.sequelize.query(countQueryvsLastWeek, { type: QueryTypes.SELECT });
 
-      response.totalReqWithSubjectFound = 20;
-      response.totalReqWithSubjectFoundvsLastWeek = 4;
+      if(countRes && countRes.length > 0) {
+        response.avgReqPerDay = countRes[0].avgReqPerDay;
+        response.avgReqPerWeek = countRes[0].avgReqPerWeek;
+        response.totalReq = countRes[0].totalReq;
+        response.totalReqWithSubjectFound = countRes[0].totalReqWithSubjectFound;
+        response.totalReqWithMismatch = countRes[0].totalReqWithMismatch;
+      }
 
-      response.totalReqWithMismatch = 10;
-      response.totalReqWithMismatchvsLastWeek = 11;
+      if(countResvsLastWeek && countResvsLastWeek.length > 0) {
+        response.avgReqPerDayvsLastWeek = countResvsLastWeek[0].avgVsLastWeekPerc;
+        response.avgReqPerWeekvsLastWeek = countResvsLastWeek[0].avgVsLastWeekPerc;
+        response.totalReqvsLastWeek = countResvsLastWeek[0].avgVsLastWeekPerc;
+        response.totalReqWithSubjectFoundvsLastWeek = countResvsLastWeek[0].totalReqWithSubjectFoundvsLastWeek;
+        response.totalReqWithMismatchvsLastWeek = countResvsLastWeek[0].totalReqWithMismatchvsLastWeek;
+      }
+      
       logger.info(`response ::: ${JSON.stringify(response)}`)
       return resolve(response);
 
