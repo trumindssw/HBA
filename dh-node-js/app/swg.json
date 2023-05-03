@@ -2,19 +2,27 @@
     "swagger": "2.0",
     "info": {
         "version": "1.0.0",
-        "title": "Yet Another Node.js Blogg Application API",
-        "description": "Yet Another Node.js Blogg Application API",
+        "title": "Hyperbus Adaptor - API",
+        "description": "Hyperbus Adaptor - API",
         "license": {
             "name": "MIT",
             "url": "https://opensource.org/licenses/MIT"
         }
     },
-    "host": "localhost:3000",
-    "basePath": "/api/v1",
+    "host": "localhost:5000",
+    "basePath": "/",
     "tags": [
         {
-            "name": "Users",
-            "description": "API for users in the system"
+            "name": "Login",
+            "description": "API for authentication"
+        },
+        {
+            "name": "Excel",
+            "description": "API for all excel related functionalities"
+        },
+        {
+            "name": "Request",
+            "description": "API for all verification related functionalities"
         }
     ],
     "schemes": [
@@ -27,19 +35,19 @@
         "application/json"
     ],
     "paths": {
-        "/users": {
+        "/login": {
             "post": {
                 "tags": [
-                    "Users"
+                    "Login"
                 ],
-                "description": "Create new user in system",
+                "description": "API to authenticate user",
                 "parameters": [
                     {
-                        "name": "user",
+                        "name": "User Credentials",
                         "in": "body",
-                        "description": "User that we want to create",
+                        "description": "Login Credentials that the user enters",
                         "schema": {
-                            "$ref": "#/definitions/User"
+                            "$ref": "#/definitions/UserCredentials"
                         }
                     }
                 ],
@@ -48,86 +56,164 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "New user is created",
+                        "description": "User is logged in",
                         "schema": {
-                            "$ref": "#/definitions/User"
+                            "$ref": "#/definitions/successResponse"
                         }
-                    }
-                }
-            },
-            "get": {
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Get all users in system",
-                "responses": {
-                    "200": {
-                        "description": "OK",
+                    },
+                    "401": {
+                        "description": "Unauthorized Access",
                         "schema": {
-                            "$ref": "#/definitions/Users"
+                            "$ref": "#/definitions/errorResponse"
                         }
                     }
                 }
             }
         },
-        "/users/{userId}": {
-            "parameters": [
-                {
-                    "name": "userId",
-                    "in": "path",
-                    "required": true,
-                    "description": "ID of user that we want to find",
-                    "type": "string"
-                }
-            ],
-            "get": {
+        "/request/verify": {
+            "post": {
                 "tags": [
-                    "Users"
+                    "Request"
                 ],
-                "summary": "Get user with given ID",
-                "responses": {
-                    "200": {
-                        "description": "User is found",
-                        "schema": {
-                            "$ref": "#/definitions/User"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "summary": "Delete user with given ID",
-                "tags": [
-                    "Users"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User is deleted",
-                        "schema": {
-                            "$ref": "#/definitions/User"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "summary": "Update user with give ID",
-                "tags": [
-                    "Users"
-                ],
+                "description": "API to verify subject requests'",
                 "parameters": [
                     {
-                        "name": "user",
-                        "in": "body",
-                        "description": "User with new values of properties",
+                        "name": "Authorization",
+                        "in": "header",
                         "schema": {
-                            "$ref": "#/definitions/User"
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Requests",
+                        "in": "body",
+                        "description": "List of subject requests",
+                        "schema": {
+                            "$ref": "#/definitions/subjectRequestList"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/verifySuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/request/getAllRequests": {
+            "post": {
+                "tags": ["Request"],
+                "description": "API to get all requests",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Req Body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/requestBody"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "User is updated",
                         "schema": {
-                            "$ref": "#/definitions/User"
+                            "$ref": "#/definitions/requestResponseList"
+                        }
+                    }
+                }
+            }
+        },
+        "/request/getRequestDetail": {
+            "get": {
+                "tags": ["Request"],
+                "description": "API to get request detail for given requestID",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "reqId",
+                        "in": "query",
+                        "description": "requestID",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "properties": {
+                                "status": {"type": "integer", "example": 1},
+                                "message": {"type": "string"},
+                                "data": {
+                                    "properties": {
+                                        "message": {"type": "string"},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "key": {"type":"string"},
+                                                    "value":{"type": "string"},
+                                                    "checked": {"type":"integer", "example": 1}
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/request/getRequestCounts": {
+            "get": {
+                "tags": ["Request"],
+                "description": "API to get request counts",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "properties": {
+                                "status": {"type": "integer", "example": 1},
+                                "message": {"type": "string"},
+                                "data": {
+                                    "properties": {
+                                        "avgReqPerDay": {"type": "string", "example": "115"},
+                                        "avgReqPerWeek": {"type": "string", "example": "115"},
+                                        "totalReq": {"type": "string", "example": "115"},
+                                        "totalReqWithSubjectFound": {"type": "string", "example": "115"},
+                                        "totalReqWithMismatch": {"type": "string", "example": "115"},
+                                        "avgReqPerDayvsLastWeek": {"type": "string", "example": "115"},
+                                        "avgReqPerWeekvsLastWeek": {"type": "string", "example": "115"},
+                                        "totalReqvsLastWeek": {"type": "string", "example": "115"},
+                                        "totalReqWithSubjectFoundvsLastWeek": {"type": "string", "example": "115"},
+                                        "totalReqWithMismatchvsLastWeek": {"type": "string", "example": "115"}
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -135,31 +221,130 @@
         }
     },
     "definitions": {
-        "User": {
-            "required": [
-                "email",
-                "_id"
-            ],
+        "UserCredentials": {
+            "required": ["username", "password"],
             "properties": {
-                "_id": {
-                    "type": "string",
-                    "uniqueItems": true
-                },
-                "email": {
-                    "type": "string",
-                    "uniqueItems": true
-                },
-                "lastName": {
-                    "type": "string"
-                },
-                "firstName": {
-                    "type": "string"
+                "username": {"type": "string", "example": "hyperbus"},
+                "password": {"type": "string", "example": "123456"}
+            }
+        },
+        "successResponse": {
+            "properties": {
+                "status": {"type": "number", "example": 1},
+                "message": {"type": "string"},
+                "data": {
+                    "properties": {
+                        "token": {"type": "string"},
+                        "status": {"type": "integer", "example": 200}
+                    }
                 }
             }
         },
-        "Users": {
+        "errorResponse": {
+            "properties": {
+                "status": {"type": "integer", "example": 0},
+                "message": {"type": "string"},
+                "error": {
+                    "properties": {
+                        "message": {"type": "string"},
+                        "status": {"type": "integer", "example": 401}
+                    }
+                }
+            }
+        },
+        "subjectRequest": {
+            "type": "object",
+            "properties": {
+                "firstName": {"type": "string", "required": true},
+                "lastName": {"type": "string", "required": true},
+                "issuingAuthority": {"type": "string", "required": true},
+                "document": {"type": "string", "required": true},
+                "department": {"type": "string", "required": true},
+                "startDate": {"type": "string", "required": true},
+                "endDate": {"type": "string", "required": true}
+            }
+        },
+        "subjectRequestList": {
             "type": "array",
-            "$ref": "#/definitions/User"
+            "items": {
+                "type": "object",
+                "$ref": "#/definitions/subjectRequest"
+            }
+        },
+        "verifySubject": {
+            "type": "object",
+            "properties": {
+                "requestID": {"type": "string"},
+                "veriflowID": {"type": "string"},
+                "subjectName": {"type": "string"},
+                "issuingAuthority": {"type": "string"},
+                "document": {"type": "string"},
+                "department": {"type": "string"},
+                "startDate": {"type": "string"},
+                "endDate": {"type": "string"},
+                "statusMessage": {"type": "string"},
+                "statusCode": {"type": "integer", "example": 200},
+                "status": {"type": "integer", "example": 1}
+            }
+        },
+        "verifySuccessResponse": {
+            "properties": {
+                "status": {"type": "integer", "example": 1},
+                "message": {"type": "string"},
+                "data": {
+                    "properties": {
+                        "message": {"type": "string"},
+                        "data": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/verifySubject"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "requestBody": {
+            "type":"object",
+            "properties": {
+                "page": {"type": "integer", "example": 1},
+                "limit": {"type": "integer", "example": 10},
+                "status": {"type": "integer"},
+                "lastWeek": {"type": "boolean"},
+                "lastMonth": {"type": "boolean"},
+                "startDate": {"type": "string"},
+                "endDate": {"type": "string"},
+                "searchValue": {"type": "string"},
+                "sortKey": {"type": "string"},
+                "sortValue": {"type": "string"}
+            }
+        },
+        "requestResponse": {
+            "type": "object",
+            "properties": {
+                "requestID": {"type": "string"},
+                "subjectName": {"type": "string"},
+                "createdAt": {"type": "string"},
+                "statusMessage": {"type": "string"},
+                "statusCode": {"type": "integer", "example": 200},
+                "status": {"type": "integer", "example": 1}
+            }
+        },
+        "requestResponseList": {
+            "properties": {
+                "status": {"type": "integer", "example": 1},
+                "message": {"type": "string"},
+                "data": {
+                    "properties": {
+                        "data": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/requestResponse"
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

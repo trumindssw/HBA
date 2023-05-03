@@ -24,7 +24,7 @@ router.post('/upload', verifyToken, uploadFile.single('file'), responseMiddleWar
   logger.info(`Request: ${req.method} ${req.originalUrl}`)
   ExcelServices.upload(req.file)
     .then((files) => {
-      sendResponse(res, 'File Uploaded !', files);
+      sendResponse(res, 'Uploaded Successfully !!', files);
     })
     .catch((err) => {
       sendResponse(res, err.message, null, err);

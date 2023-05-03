@@ -9,6 +9,7 @@ require("dotenv").config();
 
 const swaggerUi = require("swagger-ui-express");
 const { sw, swUIOptions } = require("./config/swagger/swagger.config");
+const swaggerDocument = require('./swg.json')
 const bodyParser = require("body-parser");
 const auths = require("basic-auth");
 
@@ -157,7 +158,7 @@ app.use(
         }
     },
     swaggerUi.serve,
-    swaggerUi.setup(sw, swUIOptions)
+    swaggerUi.setup(swaggerDocument)
 );
 
 
