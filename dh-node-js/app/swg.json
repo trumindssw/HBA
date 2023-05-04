@@ -218,6 +218,117 @@
                     }
                 }
             }
+        },
+        "/excel/getUploadedFiles": {
+            "get": {
+                "tags": ["Excel"],
+                "description": "API to get all Uploaded Files",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "properties": {
+                                "status": {"type": "integer", "example": 1},
+                                "message": {"type": "string"},
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "fileName": {"type":"string"},
+                                            "createdAt":{"type": "string"}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/excel/upload": {
+            "post": {
+                "tags": [
+                    "Excel"
+                ],
+                "description": "API to upload a file",
+                "consumes": "multipart/form-data",
+                "parameters": [
+                    {
+                       "name": "Authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "file",
+                        "in": "formData",
+                        "type":"file",
+                        "description": "The file to Upload"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "properties": {
+                                "status": {"type": "integer", "example": 1},
+                                "message": {"type": "string"},
+                                "data": {
+                                    "properties": {
+                                        "message": {"type": "string"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/excel/download/{fileName}": {
+            "get": {
+                "tags": [
+                    "Excel"
+                ],
+                "description": "API to download a file",
+                "parameters": [
+                    {
+                       "name": "Authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "template",
+                        "in": "query",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    {
+                        "name": "fileName",
+                        "in": "path",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "type" : "file"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
