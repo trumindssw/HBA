@@ -326,15 +326,15 @@ const getRequestCounts = () => {
       SELECT 
       CASE 
         WHEN "prevWeekRequestCount" = 0 THEN '-' 
-        ELSE ((("thisWeekRequestCount" - "prevWeekRequestCount")/"prevWeekRequestCount") * 100 )::text
+        ELSE trunc(round((("thisWeekRequestCount" - "prevWeekRequestCount")::decimal/"prevWeekRequestCount"), 2) * 100 )::text
         END as "avgVsLastWeekPerc",
       CASE 
         WHEN "prevWeekRequestCountWithSubjectFound" = 0 THEN '-' 
-        ELSE ((("thisWeekRequestCountWithSubjectFound" - "prevWeekRequestCountWithSubjectFound")/"prevWeekRequestCountWithSubjectFound") * 100 )::text
+        ELSE trunc(round((("thisWeekRequestCountWithSubjectFound" - "prevWeekRequestCountWithSubjectFound")::decimal/"prevWeekRequestCountWithSubjectFound"), 2) * 100 )::text
         END as "totalReqWithSubjectFoundvsLastWeek",
       CASE 
         WHEN "prevWeekRequestCountWithMismatch" = 0 THEN '-' 
-        ELSE ((("thisWeekRequestCountWithMismatch" - "prevWeekRequestCountWithMismatch")/"prevWeekRequestCountWithMismatch") * 100 )::text
+        ELSE trunc(round((("thisWeekRequestCountWithMismatch" - "prevWeekRequestCountWithMismatch")::decimal/"prevWeekRequestCountWithMismatch"), 2) * 100 )::text
         END as "totalReqWithMismatchvsLastWeek"
       FROM 
       (SELECT 
@@ -343,38 +343,38 @@ const getRequestCounts = () => {
         DATE_TRUNC('week', NOW()) - interval '7 day' 
         AND DATE_TRUNC('week', NOW()) 
         THEN "requestID" 
-        END) as "prevWeekRequestCount",
+        END)::integer as "prevWeekRequestCount",
       COUNT(
         CASE WHEN "status"=1 AND "createdAt" BETWEEN 
         DATE_TRUNC('week', NOW()) - interval '7 day' 
         AND DATE_TRUNC('week', NOW()) 
         THEN "requestID" 
-        END) as "prevWeekRequestCountWithSubjectFound",
+        END)::integer as "prevWeekRequestCountWithSubjectFound",
       COUNT(
         CASE WHEN ("status" IN (0,-1)) AND "createdAt" BETWEEN 
         DATE_TRUNC('week', NOW()) - interval '7 day' 
         AND DATE_TRUNC('week', NOW()) 
         THEN "requestID" 
-        END) as "prevWeekRequestCountWithMismatch",
+        END)::integer as "prevWeekRequestCountWithMismatch",
       COUNT(
         CASE WHEN "createdAt" BETWEEN 
         DATE_TRUNC('week', NOW())
         AND DATE_TRUNC('week', NOW()) + interval '7 day' 
         THEN "requestID" 
-        END) as "thisWeekRequestCount",
+        END)::integer as "thisWeekRequestCount",
       COUNT(
         CASE WHEN "status"=1 AND "createdAt" BETWEEN 
         DATE_TRUNC('week', NOW())
         AND DATE_TRUNC('week', NOW()) + interval '7 day' 
         THEN "requestID" 
-        END) as "thisWeekRequestCountWithSubjectFound",
+        END)::integer as "thisWeekRequestCountWithSubjectFound",
       COUNT(
         CASE WHEN ("status" IN (0,-1)) AND "createdAt" BETWEEN 
         DATE_TRUNC('week', NOW())
         AND DATE_TRUNC('week', NOW()) + interval '7 day' 
         THEN "requestID" 
-        END) as "thisWeekRequestCountWithMismatch"
-      FROM "public"."requests") as foo`;
+        END)::integer as "thisWeekRequestCountWithMismatch"
+      FROM "hba"."requests") as foo`;
 
       let countRes = await dB.sequelize.query(countQuery, { type: QueryTypes.SELECT });
       let countResvsLastWeek = await dB.sequelize.query(countQueryvsLastWeek, { type: QueryTypes.SELECT });
