@@ -62,7 +62,7 @@ const upload = (file) => {
                   errorList.push(`Error - Row ${id+1} : ${text} ${fields.length==1 ? 'is' : 'are'} missing. Please check and re-upload.`)
                 } else {
                   if(!isDateValid) {
-                    logger.info(`Row ${id+1}: Invalid startDate /  endDate format`)
+                    logger.info(`Row ${id+1}: StartDate / endDate is missing or of invalid format`)
                     errorList.push(`Error - Row ${id+1} : Start / End Date is missing or format is not of type date (MM/DD/YYYY). Please check and re-upload.`)
                   } else {
                     logger.info(`Row ${id+1}: startDate > endDate`)
@@ -162,43 +162,8 @@ const getUploadedFiles = () => {
     })
 }
 
-const downloadTemplate = (query, params, res) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-          console.log(query)
-            if(query && query.template && query.template=='true') {
-                var file = params && params.fileName;
-                var fileLocation = path.join(__basedir, "/app/datafiles/templates/", file);
-                var stat = fileSystem.statSync(fileLocation);
-                console.log(fileLocation);
-                let data = Buffer.from(fs.readFileSync(fileLocation))
-                // res.writeHead(200, {
-                //     "Content-disposition": `attachment; filename=${file}`,
-                //     "Content-Type": "file",
-                //     "Content-Length": stat.size,
-                // });
-                // var readStream = fileSystem.createReadStream(fileLocation);
-                // readStream.pipe(res);
-                return res.status(200).send(data)
-            } else {
-                let fl = await Files.findOne({ where : { fileName: params.fileName }})
-                console.log(fl)
-                if(fl && fl!=null) {
-                    console.log("Result=====> ", fl.id);
-                    res.status(200).send({
-                        data: fl.data
-                    });
-                }
-            }    
-        } catch (err) {
-            console.log(err);
-            return reject(err);
-        }
-    })
-}
 
 module.exports = {
     upload,
-    getUploadedFiles,
-    downloadTemplate
+    getUploadedFiles
 }

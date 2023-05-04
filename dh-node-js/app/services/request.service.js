@@ -4,9 +4,8 @@ const Op = Sequelize.Op;
 const moment = require('moment');
 
 const dB = require('../models');
-const { getNextChar } = require("../helpers/util.helper");
 const { logger } = require('../config/logger/logger');
-const { requestObject } = require('../helpers/request.helper');
+const { requestObject, getNextRequestID, getRequestIDFromDB } = require('../helpers/request.helper');
 const Subject = dB.subjects;
 const Request = dB.requests;
 let VERIFLOW_ID = process.env.VERIFLOW_ID;
@@ -16,7 +15,6 @@ const verify = (body) => {
   return new Promise(async (resolve, reject) => {
     try {
       var status, statusCode;
-      var statusMessage;
       var request = [];
       let req;
 
@@ -93,91 +91,11 @@ const verify = (body) => {
   })
 }
 
-
-// Return the next request id 
-
-const getNextRequestID = (reqId) => {
-  return new Promise((resolve, reject) => {
-    try {
-      logger.info(`::: Inside getNextRequestID :::`)
-      logger.info(`VeriflowId ::: ${VERIFLOW_ID}`)
-      let strLength = reqId && reqId.length;
-      //strLength = 5
-      if (strLength > 6) {
-        let digits = parseInt(reqId.slice(strLength - 4));
-        let chars = reqId.slice(strLength - 6, strLength - 4);
-        if (digits && digits < 9999) {
-          digits += 1;
-        } else {
-          digits = '0001';
-          let ch1 = '';
-          let ch2 = '';
-          if (chars && chars[1] < 'Z' && chars[1] >= 'A') {
-            ch1 = chars[0];
-            ch2 = getNextChar(chars[1]);
-          } else if (chars && chars[1] == 'Z') {
-            ch2 = 'A';
-            ch1 = getNextChar(chars[0]);
-          }
-          if (ch1 >= 'A' && ch1 <= 'Z' && ch2 >= 'A' && ch2 <= 'Z') {
-            chars = ch1 + ch2;
-          } else {
-            logger.error(`RequestId limit reached`)
-            return reject("RequestId limit reached!!!");
-          }
-        }
-        digits = "0".repeat(4 - digits.toString().length) + digits;
-        reqId = VERIFLOW_ID + chars + digits;
-        logger.info(`Next RequestId ::: ${reqId}`)
-        return resolve(reqId);
-      } else {
-        logger.error(`Invalid RequestID`)
-        return reject("Invalid RequestID");
-      }
-    } catch (err) {
-      logger.error(`Error ::: ${err}`)
-      console.log(err);
-    }
-  })
-}
-
-//Return the reqId from the database which is the latest
-
-const getRequestIDFromDB = () => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      logger.info(`::: Inside getRequestIDFromDB :::`)
-      let requestId = '';
-      const request = await Request.findOne({
-        attributes: ['requestID'],
-        order: [['requestID', 'DESC']],
-        where:{
-          veriflowID : VERIFLOW_ID
-        }
-      })
-      if (!request) {
-        requestId = requestId + VERIFLOW_ID + 'AA0001';
-      } else {
-        requestId = request.requestID;
-        //requestId = 'DU100ZZ9999'
-        requestId = await getNextRequestID(requestId);
-      }
-      logger.info(`RequestId ::: ${requestId}`)
-      resolve(requestId);
-
-    } catch (err) {
-      logger.error(`Error ::: ${err}`)
-      reject(err)
-    }
-  })
-}
-
-
 const getAllRequests = (body) => {
   return new Promise(async (resolve, reject) => {
     try {
       logger.info(`Body ::: ${JSON.stringify(body)}`)
-  
+
       let page = body && body.page && Number(body.page) || 1;
       let limit = body && body.limit && Number(body.limit) || 10;
       let status = body && body.status && Number(body.status);
@@ -189,39 +107,45 @@ const getAllRequests = (body) => {
       let sortKey = body && body.sortKey || 'createdAt';
       let sortValue = body && body.sortValue || 'DESC';
       let offset = (page - 1) * limit || 0, requests;
-     
+
       logger.info(`Page ::: ${page} ; Limit ::: ${limit} ; Offset ::: ${offset}`);
       let condition = [];
       if (status != null) {
-        condition.push({"status" : status});
+        condition.push({ "status": status });
       }
       if (lastWeek) {
-        condition.push({"createdAt" : { [Op.gte]: moment().subtract(7, 'days').toDate() }});
+        condition.push({ "createdAt": { [Op.gte]: moment().subtract(7, 'days').toDate() } });
       }
       if (lastMonth) {
-        condition.push({"createdAt" : { [Op.gte]: moment().subtract(30, 'days').toDate() }});
+        condition.push({ "createdAt": { [Op.gte]: moment().subtract(30, 'days').toDate() } });
       }
       if (startDate && endDate) {
         endDate = moment(endDate).add(1, 'days').format('YYYY-MM-DD')
         logger.info(`Requests from ${startDate} to ${endDate}`)
-        condition.push({"createdAt" : { [Op.between]: [new Date(startDate).toISOString(), new Date(endDate).toISOString()] }});
+        condition.push({ "createdAt": { [Op.between]: [new Date(startDate).toISOString(), new Date(endDate).toISOString()] } });
       }
       let input = []
-      if(searchValue){
-        input.push({"subjectName" :  {
-          [Sequelize.Op.iLike]: `%${searchValue}%`
-        }});
-        input.push({"statusMessage" :  {
-          [Sequelize.Op.iLike]: `%${searchValue}%`
-        }});
-        input.push({"requestID" :  {
-          [Sequelize.Op.iLike]: `%${searchValue}%`
-        }});
-        condition.push({[Op.or] : input});
+      if (searchValue) {
+        input.push({
+          "subjectName": {
+            [Sequelize.Op.iLike]: `%${searchValue}%`
+          }
+        });
+        input.push({
+          "statusMessage": {
+            [Sequelize.Op.iLike]: `%${searchValue}%`
+          }
+        });
+        input.push({
+          "requestID": {
+            [Sequelize.Op.iLike]: `%${searchValue}%`
+          }
+        });
+        condition.push({ [Op.or]: input });
       }
       requests = await Request.findAll({
         attributes: ["requestID", "subjectName", "createdAt", "statusCode", "statusMessage", "status"],
-        where: { [Op.and] : condition } ,
+        where: { [Op.and]: condition },
         order: [[sortKey, sortValue]],
         "page": page,
         "limit": limit,
@@ -229,7 +153,7 @@ const getAllRequests = (body) => {
       });
       logger.info(`Requests Count ::: ${requests.length}`)
       let totalCount = await Request.count({
-        where: { [Op.and] : condition }
+        where: { [Op.and]: condition }
       });
       logger.info(`TotalCount ::: ${totalCount}`)
       if (requests) {
@@ -256,8 +180,8 @@ const getAllRequests = (body) => {
 const getRequestDetail = (query) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log(query)
-      if(!query || !query.reqId ) {
+      logger.info(`Request Query ::: ${query}`);
+      if (!query || !query.reqId) {
         logger.info(`Request ID is not defined or null`)
         return reject({
           message: "Request ID is undefined or null",
@@ -282,13 +206,16 @@ const getRequestDetail = (query) => {
         'department': 'Department',
         'startYear': 'Start Year',
         'endYear': 'End Year',
-        'status' : 'status'
+        'status': 'status'
       }
 
-      if (requestStatus && requestStatus.dataValues ) {
+      if (requestStatus && requestStatus.dataValues) {
         for (var key in requestStatus.dataValues) {
           requestDetail.push({ "key": keyMap[key], "value": requestStatus.dataValues[key], "checked": requestStatus.dataValues.status })
         }
+
+        logger.info(`Response for requestId: ${reqId} ::: ${JSON.stringify(requestDetail)}`);
+
         return resolve({
           message: "Request is...",
           data: requestDetail,
@@ -312,7 +239,18 @@ const getRequestDetail = (query) => {
 const getRequestCounts = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      let response = {};
+      let response = {
+        "avgReqPerDay": 0,
+        "avgReqPerWeek": 0,
+        "totalReq": 0,
+        "totalReqWithSubjectFound": 0,
+        "totalReqWithMismatch": 0,
+        "avgReqPerDayvsLastWeek": 0,
+        "avgReqPerWeekvsLastWeek": 0,
+        "totalReqvsLastWeek": 0,
+        "totalReqWithSubjectFoundvsLastWeek": 0,
+        "totalReqWithMismatchvsLastWeek": 0
+      };
       let countQuery = `
       SELECT 
       (COUNT(*)::float)/(MAX("createdAt"::date) - min("createdAt"::date)) as "avgReqPerDay",
@@ -379,7 +317,10 @@ const getRequestCounts = () => {
       let countRes = await dB.sequelize.query(countQuery, { type: QueryTypes.SELECT });
       let countResvsLastWeek = await dB.sequelize.query(countQueryvsLastWeek, { type: QueryTypes.SELECT });
 
-      if(countRes && countRes.length > 0) {
+      logger.info(`Count Query Data Result Length ::: ${countRes.length}`);
+      logger.info(`Count Query Data vs Last Week Result Length ::: ${countResvsLastWeek.length}`);
+
+      if (countRes && countRes.length > 0 && countRes[0]) {
         response.avgReqPerDay = countRes[0].avgReqPerDay;
         response.avgReqPerWeek = countRes[0].avgReqPerWeek;
         response.totalReq = countRes[0].totalReq;
@@ -387,14 +328,14 @@ const getRequestCounts = () => {
         response.totalReqWithMismatch = countRes[0].totalReqWithMismatch;
       }
 
-      if(countResvsLastWeek && countResvsLastWeek.length > 0) {
+      if (countResvsLastWeek && countResvsLastWeek.length > 0 && countResvsLastWeek[0]) {
         response.avgReqPerDayvsLastWeek = countResvsLastWeek[0].avgVsLastWeekPerc;
         response.avgReqPerWeekvsLastWeek = countResvsLastWeek[0].avgVsLastWeekPerc;
         response.totalReqvsLastWeek = countResvsLastWeek[0].avgVsLastWeekPerc;
         response.totalReqWithSubjectFoundvsLastWeek = countResvsLastWeek[0].totalReqWithSubjectFoundvsLastWeek;
         response.totalReqWithMismatchvsLastWeek = countResvsLastWeek[0].totalReqWithMismatchvsLastWeek;
       }
-      
+
       logger.info(`response ::: ${JSON.stringify(response)}`)
       return resolve(response);
 
