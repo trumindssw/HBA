@@ -107,7 +107,9 @@
         },
         "/request/getAllRequests": {
             "post": {
-                "tags": ["Request"],
+                "tags": [
+                    "Request"
+                ],
                 "description": "API to get all requests",
                 "parameters": [
                     {
@@ -136,7 +138,9 @@
         },
         "/request/getRequestDetail": {
             "get": {
-                "tags": ["Request"],
+                "tags": [
+                    "Request"
+                ],
                 "description": "API to get request detail for given requestID",
                 "parameters": [
                     {
@@ -157,18 +161,32 @@
                     "200": {
                         "schema": {
                             "properties": {
-                                "status": {"type": "integer", "example": 1},
-                                "message": {"type": "string"},
+                                "status": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
                                 "data": {
                                     "properties": {
-                                        "message": {"type": "string"},
+                                        "message": {
+                                            "type": "string"
+                                        },
                                         "data": {
                                             "type": "array",
                                             "items": {
                                                 "properties": {
-                                                    "key": {"type":"string"},
-                                                    "value":{"type": "string"},
-                                                    "checked": {"type":"integer", "example": 1}
+                                                    "key": {
+                                                        "type": "string"
+                                                    },
+                                                    "value": {
+                                                        "type": "string"
+                                                    },
+                                                    "checked": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    }
                                                 }
                                             }
                                         }
@@ -182,7 +200,9 @@
         },
         "/request/getRequestCounts": {
             "get": {
-                "tags": ["Request"],
+                "tags": [
+                    "Request"
+                ],
                 "description": "API to get request counts",
                 "parameters": [
                     {
@@ -197,20 +217,55 @@
                     "200": {
                         "schema": {
                             "properties": {
-                                "status": {"type": "integer", "example": 1},
-                                "message": {"type": "string"},
+                                "status": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
                                 "data": {
                                     "properties": {
-                                        "avgReqPerDay": {"type": "string", "example": "115"},
-                                        "avgReqPerWeek": {"type": "string", "example": "115"},
-                                        "totalReq": {"type": "string", "example": "115"},
-                                        "totalReqWithSubjectFound": {"type": "string", "example": "115"},
-                                        "totalReqWithMismatch": {"type": "string", "example": "115"},
-                                        "avgReqPerDayvsLastWeek": {"type": "string", "example": "115"},
-                                        "avgReqPerWeekvsLastWeek": {"type": "string", "example": "115"},
-                                        "totalReqvsLastWeek": {"type": "string", "example": "115"},
-                                        "totalReqWithSubjectFoundvsLastWeek": {"type": "string", "example": "115"},
-                                        "totalReqWithMismatchvsLastWeek": {"type": "string", "example": "115"}
+                                        "avgReqPerDay": {
+                                            "type": "string",
+                                            "example": "115"
+                                        },
+                                        "avgReqPerWeek": {
+                                            "type": "string",
+                                            "example": "115"
+                                        },
+                                        "totalReq": {
+                                            "type": "string",
+                                            "example": "115"
+                                        },
+                                        "totalReqWithSubjectFound": {
+                                            "type": "string",
+                                            "example": "115"
+                                        },
+                                        "totalReqWithMismatch": {
+                                            "type": "string",
+                                            "example": "115"
+                                        },
+                                        "avgReqPerDayvsLastWeek": {
+                                            "type": "string",
+                                            "example": "115"
+                                        },
+                                        "avgReqPerWeekvsLastWeek": {
+                                            "type": "string",
+                                            "example": "115"
+                                        },
+                                        "totalReqvsLastWeek": {
+                                            "type": "string",
+                                            "example": "115"
+                                        },
+                                        "totalReqWithSubjectFoundvsLastWeek": {
+                                            "type": "string",
+                                            "example": "115"
+                                        },
+                                        "totalReqWithMismatchvsLastWeek": {
+                                            "type": "string",
+                                            "example": "115"
+                                        }
                                     }
                                 }
                             }
@@ -221,7 +276,9 @@
         },
         "/excel/getUploadedFiles": {
             "get": {
-                "tags": ["Excel"],
+                "tags": [
+                    "Excel"
+                ],
                 "description": "API to get all Uploaded Files",
                 "parameters": [
                     {
@@ -236,14 +293,23 @@
                     "200": {
                         "schema": {
                             "properties": {
-                                "status": {"type": "integer", "example": 1},
-                                "message": {"type": "string"},
+                                "status": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
                                 "data": {
                                     "type": "array",
                                     "items": {
                                         "properties": {
-                                            "fileName": {"type":"string"},
-                                            "createdAt":{"type": "string"}
+                                            "fileName": {
+                                                "type": "string"
+                                            },
+                                            "createdAt": {
+                                                "type": "string"
+                                            }
                                         }
                                     }
                                 }
@@ -262,7 +328,7 @@
                 "consumes": "multipart/form-data",
                 "parameters": [
                     {
-                       "name": "Authorization",
+                        "name": "Authorization",
                         "in": "header",
                         "schema": {
                             "type": "string"
@@ -271,7 +337,7 @@
                     {
                         "name": "file",
                         "in": "formData",
-                        "type":"file",
+                        "type": "file",
                         "description": "The file to Upload"
                     }
                 ],
@@ -282,11 +348,18 @@
                     "200": {
                         "schema": {
                             "properties": {
-                                "status": {"type": "integer", "example": 1},
-                                "message": {"type": "string"},
+                                "status": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
                                 "data": {
                                     "properties": {
-                                        "message": {"type": "string"}
+                                        "message": {
+                                            "type": "string"
+                                        }
                                     }
                                 }
                             }
@@ -303,7 +376,7 @@
                 "description": "API to download a file",
                 "parameters": [
                     {
-                       "name": "Authorization",
+                        "name": "Authorization",
                         "in": "header",
                         "schema": {
                             "type": "string"
@@ -324,7 +397,7 @@
                 "responses": {
                     "200": {
                         "schema": {
-                            "type" : "file"
+                            "type": "file"
                         }
                     }
                 }
@@ -333,32 +406,61 @@
     },
     "definitions": {
         "UserCredentials": {
-            "required": ["username", "password"],
+            "required": [
+                "username",
+                "password"
+            ],
             "properties": {
-                "username": {"type": "string", "example": "hyperbus"},
-                "password": {"type": "string", "example": "123456"}
+                "username": {
+                    "type": "string",
+                    "example": "hyperbus"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "123456"
+                }
             }
         },
         "successResponse": {
             "properties": {
-                "status": {"type": "number", "example": 1},
-                "message": {"type": "string"},
+                "status": {
+                    "type": "number",
+                    "example": 1
+                },
+                "message": {
+                    "type": "string"
+                },
                 "data": {
                     "properties": {
-                        "token": {"type": "string"},
-                        "status": {"type": "integer", "example": 200}
+                        "token": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "type": "integer",
+                            "example": 200
+                        }
                     }
                 }
             }
         },
         "errorResponse": {
             "properties": {
-                "status": {"type": "integer", "example": 0},
-                "message": {"type": "string"},
+                "status": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "message": {
+                    "type": "string"
+                },
                 "error": {
                     "properties": {
-                        "message": {"type": "string"},
-                        "status": {"type": "integer", "example": 401}
+                        "message": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "type": "integer",
+                            "example": 401
+                        }
                     }
                 }
             }
@@ -366,13 +468,34 @@
         "subjectRequest": {
             "type": "object",
             "properties": {
-                "firstName": {"type": "string", "required": true},
-                "lastName": {"type": "string", "required": true},
-                "issuingAuthority": {"type": "string", "required": true},
-                "document": {"type": "string", "required": true},
-                "department": {"type": "string", "required": true},
-                "startDate": {"type": "string", "required": true},
-                "endDate": {"type": "string", "required": true}
+                "firstName": {
+                    "type": "string",
+                    "required": true
+                },
+                "lastName": {
+                    "type": "string",
+                    "required": true
+                },
+                "issuingAuthority": {
+                    "type": "string",
+                    "required": true
+                },
+                "document": {
+                    "type": "string",
+                    "required": true
+                },
+                "department": {
+                    "type": "string",
+                    "required": true
+                },
+                "startDate": {
+                    "type": "string",
+                    "required": true
+                },
+                "endDate": {
+                    "type": "string",
+                    "required": true
+                }
             }
         },
         "subjectRequestList": {
@@ -385,26 +508,57 @@
         "verifySubject": {
             "type": "object",
             "properties": {
-                "requestID": {"type": "string"},
-                "veriflowID": {"type": "string"},
-                "subjectName": {"type": "string"},
-                "issuingAuthority": {"type": "string"},
-                "document": {"type": "string"},
-                "department": {"type": "string"},
-                "startDate": {"type": "string"},
-                "endDate": {"type": "string"},
-                "statusMessage": {"type": "string"},
-                "statusCode": {"type": "integer", "example": 200},
-                "status": {"type": "integer", "example": 1}
+                "requestID": {
+                    "type": "string"
+                },
+                "veriflowID": {
+                    "type": "string"
+                },
+                "subjectName": {
+                    "type": "string"
+                },
+                "issuingAuthority": {
+                    "type": "string"
+                },
+                "document": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "statusMessage": {
+                    "type": "string"
+                },
+                "statusCode": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "status": {
+                    "type": "integer",
+                    "example": 1
+                }
             }
         },
         "verifySuccessResponse": {
             "properties": {
-                "status": {"type": "integer", "example": 1},
-                "message": {"type": "string"},
+                "status": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "message": {
+                    "type": "string"
+                },
                 "data": {
                     "properties": {
-                        "message": {"type": "string"},
+                        "message": {
+                            "type": "string"
+                        },
                         "data": {
                             "type": "array",
                             "items": {
@@ -416,35 +570,76 @@
             }
         },
         "requestBody": {
-            "type":"object",
+            "type": "object",
             "properties": {
-                "page": {"type": "integer", "example": 1},
-                "limit": {"type": "integer", "example": 10},
-                "status": {"type": "integer"},
-                "lastWeek": {"type": "boolean"},
-                "lastMonth": {"type": "boolean"},
-                "startDate": {"type": "string"},
-                "endDate": {"type": "string"},
-                "searchValue": {"type": "string"},
-                "sortKey": {"type": "string"},
-                "sortValue": {"type": "string"}
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "limit": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "lastWeek": {
+                    "type": "boolean"
+                },
+                "lastMonth": {
+                    "type": "boolean"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "searchValue": {
+                    "type": "string"
+                },
+                "sortKey": {
+                    "type": "string"
+                },
+                "sortValue": {
+                    "type": "string"
+                }
             }
         },
         "requestResponse": {
             "type": "object",
             "properties": {
-                "requestID": {"type": "string"},
-                "subjectName": {"type": "string"},
-                "createdAt": {"type": "string"},
-                "statusMessage": {"type": "string"},
-                "statusCode": {"type": "integer", "example": 200},
-                "status": {"type": "integer", "example": 1}
+                "requestID": {
+                    "type": "string"
+                },
+                "subjectName": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "statusMessage": {
+                    "type": "string"
+                },
+                "statusCode": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "status": {
+                    "type": "integer",
+                    "example": 1
+                }
             }
         },
         "requestResponseList": {
             "properties": {
-                "status": {"type": "integer", "example": 1},
-                "message": {"type": "string"},
+                "status": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "message": {
+                    "type": "string"
+                },
                 "data": {
                     "properties": {
                         "data": {
