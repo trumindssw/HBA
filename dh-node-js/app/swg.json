@@ -368,7 +368,7 @@
                 }
             }
         },
-        "/excel/download/{fileName}": {
+        "/excel/download": {
             "get": {
                 "tags": [
                     "Excel"
@@ -383,14 +383,8 @@
                         }
                     },
                     {
-                        "name": "template",
-                        "in": "query",
-                        "type": "boolean",
-                        "example": false
-                    },
-                    {
                         "name": "fileName",
-                        "in": "path",
+                        "in": "query",
                         "type": "string"
                     }
                 ],
@@ -398,6 +392,15 @@
                     "200": {
                         "schema": {
                             "type": "file"
+                        }
+                    },
+                    "400": {
+                        "schema": {
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     }
                 }

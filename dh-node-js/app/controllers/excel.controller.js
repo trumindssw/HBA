@@ -38,41 +38,36 @@ router.get('/getUploadedFiles', verifyToken, responseMiddleWare(), (req, res) =>
       sendResponse(res, 'List of Files Uploaded', files);
     })
     .catch((err) => {
-      sendResponse(res, err.message, err);
+      sendResponse(res, err.message, null, err);
     });
 });
 
-router.get('/download/:fileName', verifyToken, (req, res) => {
+router.get('/download', verifyToken, (req, res) => {
   logger.info(`Request: ${req.method} ${req.originalUrl}`)
   try {
-      let query = req && req.query;
-      let params = req && req.params;
-      logger.info(`Request Query: ${JSON.stringify(query)}`)
-      logger.info(`Request Params: ${JSON.stringify(params)}`)
-      if(query && query.template && query.template=='true') {
-          var file = params && params.fileName;
-          var fileLocation = path.join(__basedir, "/app/datafiles/templates/", file);
-          var stat = fileSystem.statSync(fileLocation);
-          logger.info(`File location: ${fileLocation}`);
-          var readStream = fileSystem.createReadStream(fileLocation);
-          
+    let fileName = req && req.query && req.query.fileName;
+    logger.info(`Request Query: ${JSON.stringify(fileName)}`)
+    if (fileName) {
+      Files.findOne({ where: { fileName: fileName } })
+        .then(fl => {
+          logger.info(`File Id: ${fl.id}`);
           res.setHeader(
             "Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "Content-Disposition", `attachment; filename=${file}`);
-          readStream.pipe(res);
-      } else {
-          Files.findOne({ where : { fileName: params.fileName }})
-          .then (fl => {
-            logger.info(`File Id: ${fl.id}`);
-            res.setHeader(
-              "Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-              "Content-Disposition", `attachment; filename=${params.fileName}`);
-              res.status(200).send(fl.data);
-          })
-      }    
+            "Content-Disposition", `attachment; filename=${fileName}`);
+          res.status(200).send(fl.data);
+        })
+        .catch(error => {
+          logger.error(`Error in getting the file ::: ${error}`);
+          res.status(400).send({ message: `No such file with filename: ${fileName}` })
+        })
+    } else {
+      logger.error(`Error in query params`);
+      res.status(400).send({ message: `Please provide a fileName` })
+    }
+
   } catch (err) {
-      console.log(err);
-      // sendResponse(res, err.message, null, err);
+    console.log(err);
+    res.send(400).send(err)
   }
 });
 

@@ -253,8 +253,8 @@ const getRequestCounts = () => {
       };
       let countQuery = `
       SELECT 
-      (COUNT(*)::float)/(MAX("createdAt"::date) - min("createdAt"::date)) as "avgReqPerDay",
-      (COUNT(*)::float)/((EXTRACT('DAYS' from (DATE_TRUNC('week', max("createdAt"::date)) - DATE_TRUNC('week', min("createdAt"::date))))::integer)/7 + 1) as "avgReqPerWeek",
+      ROUND(((COUNT(*)::float)/(MAX("createdAt"::date) - min("createdAt"::date)))::decimal, 1)::float as "avgReqPerDay",
+      ROUND(((COUNT(*)::float)/((EXTRACT('DAYS' from (DATE_TRUNC('week', max("createdAt"::date)) - DATE_TRUNC('week', min("createdAt"::date))))::integer)/7 + 1))::decimal, 1)::float as "avgReqPerWeek",
       COUNT(*)::integer as "totalReq",
       COUNT(CASE WHEN "status"=1 THEN "requestID" END)::integer as "totalReqWithSubjectFound",
       COUNT(CASE WHEN "status"=0 OR "status"=-1 THEN "requestID" END)::integer as "totalReqWithMismatch" 
