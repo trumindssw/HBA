@@ -106,7 +106,7 @@ const getAllRequests = (body) => {
       let searchValue = body && body.searchValue;
       let sortKey = body && body.sortKey || 'createdAt';
       let sortValue = body && body.sortValue || 'DESC';
-      let offset = (page - 1) * limit || 0, requests;
+      let offset = (page - 1) * limit || 0, requests = [];
 
       logger.info(`Page ::: ${page} ; Limit ::: ${limit} ; Offset ::: ${offset}`);
       let condition = [];
@@ -136,9 +136,14 @@ const getAllRequests = (body) => {
             [Sequelize.Op.iLike]: `%${searchValue}%`
           }
         });
+        input.push(
+          Sequelize.where(Sequelize.cast(Sequelize.col("statusCode"), 'varchar'), {
+            [Sequelize.Op.iLike]: `%${searchValue}%`
+          })
+        );
         input.push({
           "requestID": {
-            [Sequelize.Op.iLike]: `%${searchValue}%`
+            [Sequelize.Op.iLike]:`%${searchValue}%`
           }
         });
         condition.push({ [Op.or]: input });
