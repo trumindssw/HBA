@@ -40,36 +40,36 @@ router.get('/getUploadedFiles', verifyToken, responseMiddleWare(), (req, res) =>
 
 router.get('/download/:fileName', verifyToken, (req, res) => {
   try {
-      let query = req && req.query;
-      let params = req && req.params;
-      console.log(query)
-      if(query && query.template && query.template=='true') {
-          var file = params && params.fileName;
-          var fileLocation = path.join(__basedir, "/app/datafiles/templates/", file);
-          var stat = fileSystem.statSync(fileLocation);
-          console.log(fileLocation);
-          let data = Buffer.from(fs.readFileSync(fileLocation))
-          // res.writeHead(200, {
-          //     "Content-disposition": `attachment; filename=${file}`,
-          //     "Content-Type": "file",
-          //     "Content-Length": stat.size,
-          // });
-          // var readStream = fileSystem.createReadStream(fileLocation);
-          // readStream.pipe(res);
-          return res.status(200).send(data)
-      } else {
-          Files.findOne({ where : { fileName: params.fileName }})
-          .then (fl => {
-            console.log("Result=====> ", fl.id);
-              res.status(200).send({
-                  data: fl.data
-              });
-          })
-      }    
+    let query = req && req.query;
+    let params = req && req.params;
+    console.log(query)
+    if (query && query.template && query.template == 'true') {
+      var file = params && params.fileName;
+      var fileLocation = path.join(__basedir, "/app/datafiles/templates/", file);
+      var stat = fileSystem.statSync(fileLocation);
+      console.log(fileLocation);
+      let data = Buffer.from(fs.readFileSync(fileLocation))
+      // res.writeHead(200, {
+      //     "Content-disposition": `attachment; filename=${file}`,
+      //     "Content-Type": "file",
+      //     "Content-Length": stat.size,
+      // });
+      // var readStream = fileSystem.createReadStream(fileLocation);
+      // readStream.pipe(res);
+      return res.status(200).send(data)
+    } else {
+      Files.findOne({ where: { fileName: params.fileName } })
+        .then(fl => {
+          console.log("Result=====> ", fl.id);
+          res.status(200).send({
+            data: fl.data
+          });
+        })
+    }
   } catch (err) {
-      console.log(err);
-      // sendResponse(res, err.message, null, err);
+    console.log(err);
+    // sendResponse(res, err.message, null, err);
   }
 });
 
-module.exports = router;
+module.exports = { getUploadedFilesController };
