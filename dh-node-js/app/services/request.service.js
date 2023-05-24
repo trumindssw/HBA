@@ -143,7 +143,7 @@ const getAllRequests = (body) => {
         );
         input.push({
           "requestID": {
-            [Sequelize.Op.iLike]:`%${searchValue}%`
+            [Sequelize.Op.iLike]: `%${searchValue}%`
           }
         });
         condition.push({ [Op.or]: input });
@@ -350,9 +350,25 @@ const getRequestCounts = () => {
   })
 }
 
+const viewPrevRequests = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      var datetime = new Date();
+      let totalCount = await Request.count({
+        where: { "createdAt": { [Op.gte]: datetime } }
+      });
+      return resolve(totalCount);
+    } catch (err) {
+      return reject(err);
+    }
+  })
+}
+
+
 module.exports = {
   verify,
   getAllRequests,
   getRequestDetail,
-  getRequestCounts
+  getRequestCounts,
+  viewPrevRequests
 }
