@@ -4,3 +4,5 @@ dev.env
 prod.env
 qa.env
 app/datafiles/uploads
+test/
+coverage/
