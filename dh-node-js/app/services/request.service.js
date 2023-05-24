@@ -350,10 +350,24 @@ const getRequestCounts = () => {
   })
 }
 
+
+var datetime;
+
+const currentTime = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      datetime = new Date();
+      datetime = datetime.toISOString();
+      return resolve(datetime);
+    } catch (err) {
+      return reject(err);
+    }
+  })
+}
+
 const viewPrevRequests = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      var datetime = new Date();
       let totalCount = await Request.count({
         where: { "createdAt": { [Op.gte]: datetime } }
       });
@@ -370,5 +384,6 @@ module.exports = {
   getAllRequests,
   getRequestDetail,
   getRequestCounts,
-  viewPrevRequests
+  viewPrevRequests,
+  currentTime
 }
