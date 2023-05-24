@@ -9,6 +9,7 @@ const { requestObject, getNextRequestID, getRequestIDFromDB } = require('../help
 const Subject = dB.subjects;
 const Request = dB.requests;
 let VERIFLOW_ID = process.env.VERIFLOW_ID;
+var datetime;
 
 
 const verify = (body) => {
@@ -94,6 +95,8 @@ const verify = (body) => {
 const getAllRequests = (body) => {
   return new Promise(async (resolve, reject) => {
     try {
+      datetime = new Date().toISOString();
+
       logger.info(`Body ::: ${JSON.stringify(body)}`)
 
       let page = body && body.page && Number(body.page) || 1;
@@ -350,9 +353,23 @@ const getRequestCounts = () => {
   })
 }
 
+const viewPrevRequests = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let totalCount = await Request.count({
+        where: { "createdAt": { [Op.gte]: datetime } }
+      });
+      return resolve(totalCount);
+    } catch (err) {
+      return reject(err);
+    }
+  })
+}
+
 module.exports = {
   verify,
   getAllRequests,
   getRequestDetail,
-  getRequestCounts
+  getRequestCounts,
+  viewPrevRequests
 }

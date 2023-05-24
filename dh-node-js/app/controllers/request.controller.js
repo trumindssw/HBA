@@ -57,4 +57,16 @@ router.get('/getRequestCounts', verifyToken, responseMiddleWare(), (req, res) =>
         sendResponse(res, err.message, null, err);
     })
 })
+
+router.get('/viewPrevRequests', verifyToken, responseMiddleWare(), (req, res) => {
+    logger.info(`Request: ${req.method} ${req.originalUrl}`)
+    RequestServices.viewPrevRequests()
+    .then((data) => {
+        sendResponse(res, 'Previous Request Count', data);
+    })
+    .catch(err => {
+        sendResponse(res, err.message, null, err);
+    })
+})
+
 module.exports = router;
