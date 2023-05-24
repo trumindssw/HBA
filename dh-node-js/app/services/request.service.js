@@ -96,7 +96,7 @@ const getAllRequests = (body) => {
   return new Promise(async (resolve, reject) => {
     try {
       datetime = new Date().toISOString();
-      //console.log("=", datetime)
+
       logger.info(`Body ::: ${JSON.stringify(body)}`)
 
       let page = body && body.page && Number(body.page) || 1;
@@ -353,24 +353,9 @@ const getRequestCounts = () => {
   })
 }
 
-
-
-
-// const currentTime = () => {
-//   return new Promise(async (resolve, reject) => {
-//     try {
-//       datetime = new Date().toISOString();
-//       return resolve(datetime);
-//     } catch (err) {
-//       return reject(err);
-//     }
-//   })
-// }
-
 const viewPrevRequests = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      //console.log("===========", datetime)
       let totalCount = await Request.count({
         where: { "createdAt": { [Op.gte]: datetime } }
       });
@@ -381,12 +366,10 @@ const viewPrevRequests = () => {
   })
 }
 
-
 module.exports = {
   verify,
   getAllRequests,
   getRequestDetail,
   getRequestCounts,
-  viewPrevRequests,
-  //currentTime
+  viewPrevRequests
 }
