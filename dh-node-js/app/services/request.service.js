@@ -9,6 +9,7 @@ const { requestObject, getNextRequestID, getRequestIDFromDB } = require('../help
 const Subject = dB.subjects;
 const Request = dB.requests;
 let VERIFLOW_ID = process.env.VERIFLOW_ID;
+var datetime;
 
 
 const verify = (body) => {
@@ -94,6 +95,8 @@ const verify = (body) => {
 const getAllRequests = (body) => {
   return new Promise(async (resolve, reject) => {
     try {
+      datetime = new Date().toISOString();
+      //console.log("=", datetime)
       logger.info(`Body ::: ${JSON.stringify(body)}`)
 
       let page = body && body.page && Number(body.page) || 1;
@@ -351,23 +354,23 @@ const getRequestCounts = () => {
 }
 
 
-var datetime;
 
-const currentTime = () => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      datetime = new Date();
-      datetime = datetime.toISOString();
-      return resolve(datetime);
-    } catch (err) {
-      return reject(err);
-    }
-  })
-}
+
+// const currentTime = () => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       datetime = new Date().toISOString();
+//       return resolve(datetime);
+//     } catch (err) {
+//       return reject(err);
+//     }
+//   })
+// }
 
 const viewPrevRequests = () => {
   return new Promise(async (resolve, reject) => {
     try {
+      //console.log("===========", datetime)
       let totalCount = await Request.count({
         where: { "createdAt": { [Op.gte]: datetime } }
       });
@@ -385,5 +388,5 @@ module.exports = {
   getRequestDetail,
   getRequestCounts,
   viewPrevRequests,
-  currentTime
+  //currentTime
 }
