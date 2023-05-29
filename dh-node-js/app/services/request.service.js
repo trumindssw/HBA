@@ -371,57 +371,6 @@ const viewPrevRequests = () => {
 const getWeeklyCount = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      // const weeklyRequestCounts = await Request.findAll({
-      //   attributes: [
-      //     [Sequelize.fn('date_trunc', 'week', Sequelize.col('createdAt')), 'week'],
-      //     [Sequelize.fn('count', Sequelize.col('requestID')), 'count'],
-      //   ],
-      //   group: [Sequelize.fn('date_trunc', 'week', Sequelize.col('createdAt'))],
-      // });
-      // const weeklyCounts = weeklyRequestCounts.map((entry) => ({
-      //   week: entry.dataValues.week,
-      //   count: parseInt(entry.dataValues.count),
-      // }));
-      // console.log("====",weeklyCounts);
-
-      // const weeklyRequestCountsWithOK = await Request.findAll({
-      //   attributes: [
-      //     [Sequelize.fn('date_trunc', 'week', Sequelize.col('createdAt')), 'week'],
-      //     [Sequelize.fn('count', Sequelize.col('requestID')), 'count'],
-      //   ],
-      //   where: {
-      //     status: 1,
-      //   },
-      //   group: [Sequelize.fn('date_trunc', 'week', Sequelize.col('createdAt'))],
-      // });
-      // const weeklyCountsWithOK = weeklyRequestCountsWithOK.map((entry) => ({
-      //   week: entry.dataValues.week,
-      //   count: parseInt(entry.dataValues.count),
-      // }));
-      // console.log("+++",weeklyCountsWithOK);
-
-      // const weeklyReqCntMatchNotFound = await Request.findAll({
-      //   attributes: [
-      //     [Sequelize.fn('date_trunc', 'week', Sequelize.col('createdAt')), 'week'],
-      //     [Sequelize.fn('count', Sequelize.col('requestID')), 'count'],
-      //   ],
-      //   where: {
-      //     status: 0,
-      //   },
-      //   group: [Sequelize.fn('date_trunc', 'week', Sequelize.col('createdAt'))],
-      // });
-      // const weeklyCntMatchNotFound = weeklyReqCntMatchNotFound.map((entry) => ({
-      //   week: entry.dataValues.week,
-      //   count: parseInt(entry.dataValues.count),
-      // }));
-      // console.log("*********",weeklyCntMatchNotFound);
-
-      // return resolve({
-      //   weeklyCounts : weeklyCounts,
-      //   weeklyCountsWithOK : weeklyCountsWithOK,
-      //   weeklyCntMatchNotFound : weeklyCntMatchNotFound
-      // });
-
       const weeklyCounts = await Request.findAll({
         attributes: [
           [
@@ -456,8 +405,7 @@ const getWeeklyCount = () => {
       }));
 
       weeklyCountsData.sort((a, b) => a.week - b.week); // Sort the array in ascending order of the week
-     
-      console.log("==========", weeklyCountsData);
+
       return resolve({
         weeklyCounts: weeklyCountsData,
       });
