@@ -146,7 +146,7 @@ const getAllRequests = (body) => {
         );
         input.push({
           "requestID": {
-            [Sequelize.Op.iLike]:`%${searchValue}%`
+            [Sequelize.Op.iLike]: `%${searchValue}%`
           }
         });
         condition.push({ [Op.or]: input });
@@ -183,7 +183,6 @@ const getAllRequests = (body) => {
     }
   })
 }
-
 
 const getRequestDetail = (query) => {
   return new Promise(async (resolve, reject) => {
@@ -356,11 +355,63 @@ const getRequestCounts = () => {
 const viewPrevRequests = () => {
   return new Promise(async (resolve, reject) => {
     try {
+      logger.info(`datetime ::: ${datetime}}`)
       let totalCount = await Request.count({
         where: { "createdAt": { [Op.gte]: datetime } }
       });
+      logger.info(`Unseen Request Count ::: ${totalCount}}`)
       return resolve(totalCount);
     } catch (err) {
+      logger.error(`Error ::: ${err}`)
+      return reject(err);
+    }
+  })
+}
+
+const getWeeklyCount = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const weeklyCounts = await Request.findAll({
+        attributes: [
+          [
+            Sequelize.fn('date_trunc', 'week', Sequelize.col('createdAt')),
+            'week',
+          ],
+          [
+            Sequelize.fn('count', Sequelize.col('requestID')),
+            'count',
+          ],
+          [
+            Sequelize.literal(`
+              count(CASE WHEN status = 1 THEN 1 ELSE null END)
+            `),
+            'countWithOK',
+          ],
+          [
+            Sequelize.literal(`
+              count(CASE WHEN status = 0 THEN 1 ELSE null END)
+            `),
+            'countMatchNotFound',
+          ],
+        ],
+        group: [Sequelize.fn('date_trunc', 'week', Sequelize.col('createdAt'))],
+      });
+
+      const weeklyCountsData = weeklyCounts.map((entry) => ({
+        week: entry.dataValues.week,
+        count: parseInt(entry.dataValues.count),
+        countWithOK: parseInt(entry.dataValues.countWithOK),
+        countMatchNotFound: parseInt(entry.dataValues.countMatchNotFound),
+      }));
+
+      weeklyCountsData.sort((a, b) => a.week - b.week); // Sort the array in ascending order of the week
+
+      return resolve({
+        weeklyCounts: weeklyCountsData,
+      });
+    }
+    catch (err) {
+      logger.error(`Error ::: ${err}`)
       return reject(err);
     }
   })
@@ -371,5 +422,6 @@ module.exports = {
   getAllRequests,
   getRequestDetail,
   getRequestCounts,
-  viewPrevRequests
+  viewPrevRequests,
+  getWeeklyCount
 }

@@ -69,4 +69,15 @@ router.get('/viewPrevRequests', verifyToken, responseMiddleWare(), (req, res) =>
     })
 })
 
+router.get('/getWeeklyCount', verifyToken, responseMiddleWare(), (req, res) => {
+    logger.info(`Request: ${req.method} ${req.originalUrl}`)
+    RequestServices.getWeeklyCount()
+    .then((data) => {
+        sendResponse(res, 'Previous Request Count', data);
+    })
+    .catch(err => {
+        sendResponse(res, err.message, null, err);
+    })
+})
+
 module.exports = router;
