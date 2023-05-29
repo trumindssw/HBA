@@ -42,6 +42,17 @@ router.get('/getUploadedFiles', verifyToken, responseMiddleWare(), (req, res) =>
     });
 });
 
+// const getUploadedFilesController =  (req, res) => {
+//   logger.info(`Request: ${req.method} ${req.originalUrl}`)
+//   ExcelServices.getUploadedFiles()
+//     .then((files) => {
+//       sendResponse(res, 'List of Files Uploaded', files);
+//     })
+//     .catch((err) => {
+//       sendResponse(res, err.message, null, err);
+//     });
+// };
+
 router.get('/download', verifyToken, (req, res) => {
   logger.info(`Request: ${req.method} ${req.originalUrl}`)
   try {

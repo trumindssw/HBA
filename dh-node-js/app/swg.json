@@ -274,6 +274,41 @@
                 }
             }
         },
+        "/request/viewPrevRequests": {
+            "get": {
+                "tags": [
+                    "Request"
+                ],
+                "description": "API to get the count of unseen requests",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "properties": {
+                                "status": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "data": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/excel/getUploadedFiles": {
             "get": {
                 "tags": [
