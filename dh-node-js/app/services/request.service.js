@@ -374,109 +374,121 @@ const getDailyAndWeeklyCnt = (query) => {
       let view = query && query.view;
       let startDate = query && query.startDate;
       let endDate = query && query.endDate;
-
-      if (view === 'true') {
-        endDate = moment(endDate).add(1, 'days').format('YYYY-MM-DD')
-        const requestCounts = await Request.findAll({
-          attributes: [
-            [Sequelize.fn('date', Sequelize.col('createdAt')), 'date'],
-            [Sequelize.fn('count', '*'), 'totalRequestCount'],
-            [
-              Sequelize.literal(`SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END)`),
-              'countMatchNotFound',
+      if (startDate && endDate) {
+        if (view === 'true') {
+          endDate = moment(endDate).add(1, 'days').format('YYYY-MM-DD')
+          const requestCounts = await Request.findAll({
+            attributes: [
+              [Sequelize.fn('date', Sequelize.col('createdAt')), 'date'],
+              [Sequelize.fn('count', '*'), 'totalRequestCount'],
+              [
+                Sequelize.literal(`SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END)`),
+                'countMatchNotFound',
+              ],
+              [
+                Sequelize.literal(`SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END)`),
+                'countWithOK',
+              ]
             ],
-            [
-              Sequelize.literal(`SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END)`),
-              'countWithOK',
-            ]
-          ],
-          where: {
-            createdAt: {
-              [Op.gte]: startDate,
-              [Op.lte]: endDate,
+            where: {
+              createdAt: {
+                [Op.gte]: startDate,
+                [Op.lte]: endDate,
+              },
             },
-          },
-          group: [Sequelize.literal('date')],
-          raw: true,
-        });
+            group: [Sequelize.literal('date')],
+            raw: true,
+          });
 
-        // Generate an array of dates within the date range
-        const dateRange = generateDateRange(startDate, endDate);
+          // Generate an array of dates within the date range
+          const dateRange = generateDateRange(startDate, endDate);
 
 
-        // Create an object to store the final result
-        const result = {};
+          // Create an object to store the final result
+          const result = {};
 
-        // Initialize counts for all dates as 0
-        dateRange.forEach(date => {
-          result[date] = {
-            totalRequestCount: 0,
-            countMatchNotFound: 0,
-            countWithOK: 0
-          };
-        });
+          // Initialize counts for all dates as 0
+          dateRange.forEach(date => {
+            result[date] = {
+              totalRequestCount: 0,
+              countMatchNotFound: 0,
+              countWithOK: 0
+            };
+          });
 
-        // Update the counts for existing dates from the database
-        requestCounts.forEach(count => {
-          result[count.date] = {
-            totalRequestCount: parseInt(count.totalRequestCount, 10),
-            countMatchNotFound: parseInt(count.countMatchNotFound, 10),
-            countWithOK: parseInt(count.countWithOK, 10)
-          };
-        });
+          // Update the counts for existing dates from the database
+          requestCounts.forEach(count => {
+            result[count.date] = {
+              totalRequestCount: parseInt(count.totalRequestCount, 10),
+              countMatchNotFound: parseInt(count.countMatchNotFound, 10),
+              countWithOK: parseInt(count.countWithOK, 10)
+            };
+          });
 
-        return resolve(result);
-      }
-      else {
-        const requestCounts = await Request.findAll({
-          attributes: [
-            [Sequelize.fn('date_trunc', 'week', Sequelize.col('createdAt')), 'week'],
-            [Sequelize.fn('count', '*'), 'totalRequestCount'],
-            [
-              Sequelize.literal(`SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END)`),
-              'countMatchNotFound',
-            ],
-            [
-              Sequelize.literal(`SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END)`),
-              'countWithOK',
-            ],
-          ],
-          where: {
-            createdAt: {
-              [Op.gte]: startDate,
-              [Op.lte]: endDate,
-            },
-          },
-          group: ['week'],
-          raw: true,
-        });
+          return resolve(result);
+        }
+        else {
 
-        // Generate an array of weeks within the date range
-        const weekRange = generateWeekRange(startDate, endDate);
+          // Create Date objects from the provided start and end dates
+          let start = new Date(startDate);
+          let end = new Date(endDate);
 
-        // Create an object to store the final result
-        const result = {};
+          // Check if both start and end dates are Mondays
+          if (start.getDay() === 1 && end.getDay() === 1) {
+            const requestCounts = await Request.findAll({
+              attributes: [
+                [Sequelize.fn('date_trunc', 'week', Sequelize.col('createdAt')), 'week'],
+                [Sequelize.fn('count', '*'), 'totalRequestCount'],
+                [
+                  Sequelize.literal(`SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END)`),
+                  'countMatchNotFound',
+                ],
+                [
+                  Sequelize.literal(`SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END)`),
+                  'countWithOK',
+                ],
+              ],
+              where: {
+                createdAt: {
+                  [Op.gte]: startDate,
+                  [Op.lte]: endDate,
+                },
+              },
+              group: ['week'],
+              raw: true,
+            });
 
-        // Initialize counts for all weeks as 0
-        weekRange.forEach(week => {
-          result[week] = {
-            totalRequestCount: 0,
-            countMatchNotFound: 0,
-            countWithOK: 0,
-          };
-        });
+            // Generate an array of weeks within the date range
+            const weekRange = generateWeekRange(startDate, endDate);
 
-        // Update the counts for existing weeks from the database
-        requestCounts.forEach(count => {
-          const formattedWeek = moment(count.week).format('YYYY-MM-DD');
-          result[formattedWeek] = {
-            totalRequestCount: parseInt(count.totalRequestCount, 10),
-            countMatchNotFound: parseInt(count.countMatchNotFound, 10),
-            countWithOK: parseInt(count.countWithOK, 10),
-          };
-        });
+            // Create an object to store the final result
+            const result = {};
 
-        return resolve(result);
+            // Initialize counts for all weeks as 0
+            weekRange.forEach(week => {
+              result[week] = {
+                totalRequestCount: 0,
+                countMatchNotFound: 0,
+                countWithOK: 0,
+              };
+            });
+
+            // Update the counts for existing weeks from the database
+            requestCounts.forEach(count => {
+              const formattedWeek = moment(count.week).format('YYYY-MM-DD');
+              result[formattedWeek] = {
+                totalRequestCount: parseInt(count.totalRequestCount, 10),
+                countMatchNotFound: parseInt(count.countMatchNotFound, 10),
+                countWithOK: parseInt(count.countWithOK, 10),
+              };
+            });
+            return resolve(result);
+          } else {
+            return resolve(`Please select start date and end date both as Monday's`);
+          }
+        }
+      } else {
+        return resolve('Please provide both start and end dates.');
       }
     } catch (err) {
       logger.error(`Error ::: ${err}`)
