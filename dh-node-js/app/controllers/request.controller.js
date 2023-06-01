@@ -69,9 +69,9 @@ router.get('/viewPrevRequests', verifyToken, responseMiddleWare(), (req, res) =>
     })
 })
 
-router.get('/getWeeklyCount', verifyToken, responseMiddleWare(), (req, res) => {
+router.get('/getDailyAndWeeklyCnt', verifyToken, responseMiddleWare(), (req, res) => {
     logger.info(`Request: ${req.method} ${req.originalUrl}`)
-    RequestServices.getWeeklyCount()
+    RequestServices.getDailyAndWeeklyCnt(req.query)
     .then((data) => {
         sendResponse(res, 'Previous Request Count', data);
     })

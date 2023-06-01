@@ -1,6 +1,7 @@
 const { logger } = require("../config/logger/logger");
 const { getNextChar } = require("../helpers/util.helper");
 const dB = require('../models');
+const moment = require('moment');
 
 const Request = dB.requests;
 let VERIFLOW_ID = process.env.VERIFLOW_ID;
@@ -26,7 +27,6 @@ const requestObject = (reqId, veriflowId, firstName, lastName, issuingAuthority,
         console.log(err);
     }
 }
-
 
 // Return the next request id 
 
@@ -106,8 +106,40 @@ const getRequestIDFromDB = () => {
     })
 }
 
+const generateDateRange = (startDate, endDate) => {
+    endDate = moment(endDate).subtract(1, 'days').format('YYYY-MM-DD')
+    const dateRange = [];
+    let currentDate = new Date(startDate);
+
+    while (currentDate <= new Date(endDate)) {
+        dateRange.push(currentDate.toISOString().split('T')[0]);
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return dateRange;
+}
+
+function generateWeekRange(startDate, endDate) {
+    endDate = moment(endDate).subtract(1, 'days').format('YYYY-MM-DD')
+    const start = moment(startDate);
+    const end = moment(endDate);
+
+    const weekRange = [];
+    let currentWeek = start.clone().startOf('isoWeek');
+
+    while (currentWeek.isSameOrBefore(end, 'isoWeek')) {
+        weekRange.push(currentWeek.format('YYYY-MM-DD'));
+        currentWeek.add(1, 'weeks');
+    }
+
+    return weekRange;
+}
+
+
 module.exports = {
     requestObject,
     getNextRequestID,
-    getRequestIDFromDB
+    getRequestIDFromDB,
+    generateDateRange,
+    generateWeekRange
 }

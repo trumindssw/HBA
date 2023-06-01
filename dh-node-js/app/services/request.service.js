@@ -5,7 +5,7 @@ const moment = require('moment');
 
 const dB = require('../models');
 const { logger } = require('../config/logger/logger');
-const { requestObject, getNextRequestID, getRequestIDFromDB } = require('../helpers/request.helper');
+const { requestObject, getNextRequestID, getRequestIDFromDB, generateDateRange, generateWeekRange } = require('../helpers/request.helper');
 const Subject = dB.subjects;
 const Request = dB.requests;
 let VERIFLOW_ID = process.env.VERIFLOW_ID;
@@ -368,49 +368,129 @@ const viewPrevRequests = () => {
   })
 }
 
-const getWeeklyCount = () => {
+const getDailyAndWeeklyCnt = (query) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const weeklyCounts = await Request.findAll({
-        attributes: [
-          [
-            Sequelize.fn('date_trunc', 'week', Sequelize.col('createdAt')),
-            'week',
-          ],
-          [
-            Sequelize.fn('count', Sequelize.col('requestID')),
-            'count',
-          ],
-          [
-            Sequelize.literal(`
-              count(CASE WHEN status = 1 THEN 1 ELSE null END)
-            `),
-            'countWithOK',
-          ],
-          [
-            Sequelize.literal(`
-              count(CASE WHEN status = 0 THEN 1 ELSE null END)
-            `),
-            'countMatchNotFound',
-          ],
-        ],
-        group: [Sequelize.fn('date_trunc', 'week', Sequelize.col('createdAt'))],
-      });
+      let view = query && query.view;
+      let startDate = query && query.startDate;
+      let endDate = query && query.endDate;
+      if (startDate && endDate) {
+        if (view === 'true') {
+          endDate = moment(endDate).add(1, 'days').format('YYYY-MM-DD')
+          const requestCounts = await Request.findAll({
+            attributes: [
+              [Sequelize.fn('date', Sequelize.col('createdAt')), 'date'],
+              [Sequelize.fn('count', '*'), 'totalRequestCount'],
+              [
+                Sequelize.literal(`SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END)`),
+                'countMatchNotFound',
+              ],
+              [
+                Sequelize.literal(`SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END)`),
+                'countWithOK',
+              ]
+            ],
+            where: {
+              createdAt: {
+                [Op.gte]: startDate,
+                [Op.lte]: endDate,
+              },
+            },
+            group: [Sequelize.literal('date')],
+            raw: true,
+          });
 
-      const weeklyCountsData = weeklyCounts.map((entry) => ({
-        week: entry.dataValues.week,
-        count: parseInt(entry.dataValues.count),
-        countWithOK: parseInt(entry.dataValues.countWithOK),
-        countMatchNotFound: parseInt(entry.dataValues.countMatchNotFound),
-      }));
+          // Generate an array of dates within the date range
+          const dateRange = generateDateRange(startDate, endDate);
 
-      weeklyCountsData.sort((a, b) => a.week - b.week); // Sort the array in ascending order of the week
 
-      return resolve({
-        weeklyCounts: weeklyCountsData,
-      });
-    }
-    catch (err) {
+          // Create an object to store the final result
+          const result = {};
+
+          // Initialize counts for all dates as 0
+          dateRange.forEach(date => {
+            result[date] = {
+              totalRequestCount: 0,
+              countMatchNotFound: 0,
+              countWithOK: 0
+            };
+          });
+
+          // Update the counts for existing dates from the database
+          requestCounts.forEach(count => {
+            result[count.date] = {
+              totalRequestCount: parseInt(count.totalRequestCount, 10),
+              countMatchNotFound: parseInt(count.countMatchNotFound, 10),
+              countWithOK: parseInt(count.countWithOK, 10)
+            };
+          });
+
+          return resolve(result);
+        }
+        else {
+
+          // Create Date objects from the provided start and end dates
+          let start = new Date(startDate);
+          let end = new Date(endDate);
+
+          // Check if both start and end dates are Mondays
+          if (start.getDay() === 1 && end.getDay() === 1) {
+            const requestCounts = await Request.findAll({
+              attributes: [
+                [Sequelize.fn('date_trunc', 'week', Sequelize.col('createdAt')), 'week'],
+                [Sequelize.fn('count', '*'), 'totalRequestCount'],
+                [
+                  Sequelize.literal(`SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END)`),
+                  'countMatchNotFound',
+                ],
+                [
+                  Sequelize.literal(`SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END)`),
+                  'countWithOK',
+                ],
+              ],
+              where: {
+                createdAt: {
+                  [Op.gte]: startDate,
+                  [Op.lte]: endDate,
+                },
+              },
+              group: ['week'],
+              raw: true,
+            });
+
+            // Generate an array of weeks within the date range
+            const weekRange = generateWeekRange(startDate, endDate);
+
+            // Create an object to store the final result
+            const result = {};
+
+            // Initialize counts for all weeks as 0
+            weekRange.forEach(week => {
+              result[week] = {
+                totalRequestCount: 0,
+                countMatchNotFound: 0,
+                countWithOK: 0,
+              };
+            });
+
+            // Update the counts for existing weeks from the database
+            requestCounts.forEach(count => {
+              const formattedWeek = moment(count.week).format('YYYY-MM-DD');
+              result[formattedWeek] = {
+                totalRequestCount: parseInt(count.totalRequestCount, 10),
+                countMatchNotFound: parseInt(count.countMatchNotFound, 10),
+                countWithOK: parseInt(count.countWithOK, 10),
+              };
+            });
+            return resolve(result);
+          } else {
+            return resolve(`Please select start date and end date both as Monday's`);
+          }
+        }
+      } else {
+        return resolve('Please provide both start and end dates.');
+      }
+    } catch (err) {
       logger.error(`Error ::: ${err}`)
       return reject(err);
     }
@@ -423,5 +503,5 @@ module.exports = {
   getRequestDetail,
   getRequestCounts,
   viewPrevRequests,
-  getWeeklyCount
+  getDailyAndWeeklyCnt
 }
