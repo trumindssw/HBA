@@ -309,6 +309,73 @@
                 }
             }
         },
+        "/request/getDailyAndWeeklyCnt": {
+            "get": {
+                "tags": [
+                    "Request"
+                ],
+                "description": "API to get daily and weekly requests count",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "startDate",
+                        "in": "query",
+                        "description": "start date",
+                        "type": "string"
+                    },
+                    {
+                        "name": "endDate",
+                        "in": "query",
+                        "description": "end date",
+                        "type": "string"
+                    },
+                    {
+                        "name": "view",
+                        "in": "query",
+                        "description": "To select daily or weekly view",
+                        "type": "boolean"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "properties": {
+                                "status": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "data": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "totalRequestCount": {
+                                                "type": "integer"
+                                            },
+                                            "countMatchNotFound": {
+                                                "type": "integer"
+                                            },
+                                            "countWithOK": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/excel/getUploadedFiles": {
             "get": {
                 "tags": [

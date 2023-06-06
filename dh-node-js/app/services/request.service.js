@@ -107,6 +107,7 @@ const getAllRequests = (body) => {
       let startDate = body && body.startDate;
       let endDate = body && body.endDate;
       let searchValue = body && body.searchValue;
+      let today = body && body.today;
       let sortKey = body && body.sortKey || 'createdAt';
       let sortValue = body && body.sortValue || 'DESC';
       let offset = (page - 1) * limit || 0, requests = [];
@@ -114,7 +115,12 @@ const getAllRequests = (body) => {
       logger.info(`Page ::: ${page} ; Limit ::: ${limit} ; Offset ::: ${offset}`);
       let condition = [];
       if (status != null) {
-        condition.push({ "status": status });
+        if (status == 1 || status == 0 || status == -1) {
+          condition.push({ "status": status });
+        }
+        else  if(status == 2){
+          condition.push({ "status": { [Op.or]: [0, -1] } });
+        }
       }
       if (lastWeek) {
         condition.push({ "createdAt": { [Op.gte]: moment().subtract(7, 'days').toDate() } });
@@ -126,6 +132,11 @@ const getAllRequests = (body) => {
         endDate = moment(endDate).add(1, 'days').format('YYYY-MM-DD')
         logger.info(`Requests from ${startDate} to ${endDate}`)
         condition.push({ "createdAt": { [Op.between]: [new Date(startDate).toISOString(), new Date(endDate).toISOString()] } });
+      }
+      if (today) {
+        const startOfDay = moment().startOf('day').format('YYYY-MM-DDTHH:mm:ss.SSS') + 'Z';
+        const endOfDay = moment().endOf('day').format('YYYY-MM-DDTHH:mm:ss.SSS') + 'Z';
+        condition.push({ "createdAt": { [Op.between]: [startOfDay, endOfDay] } });
       }
       let input = []
       if (searchValue) {
