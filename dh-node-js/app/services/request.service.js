@@ -363,7 +363,7 @@ const getRequestCounts = () => {
   })
 }
 
-const viewPrevRequests = () => {
+const viewPrevRequests = (datetime) => {
   return new Promise(async (resolve, reject) => {
     try {
       logger.info(`datetime ::: ${datetime}}`)
