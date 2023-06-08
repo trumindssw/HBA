@@ -6,10 +6,10 @@ const moment = require('moment');
 const dB = require('../models');
 const { logger } = require('../config/logger/logger');
 const { requestObject, getNextRequestID, getRequestIDFromDB, generateDateRange, generateWeekRange } = require('../helpers/request.helper');
+const { setDatetime, getDatetime } = require('../helpers/globals');
 const Subject = dB.subjects;
 const Request = dB.requests;
 let VERIFLOW_ID = process.env.VERIFLOW_ID;
-var datetime;
 
 
 const verify = (body) => {
@@ -95,7 +95,8 @@ const verify = (body) => {
 const getAllRequests = (body) => {
   return new Promise(async (resolve, reject) => {
     try {
-      datetime = new Date().toISOString();
+      const datetime = new Date().toISOString();
+      setDatetime(datetime);
 
       logger.info(`Body ::: ${JSON.stringify(body)}`)
 
@@ -118,7 +119,7 @@ const getAllRequests = (body) => {
         if (status == 1 || status == 0 || status == -1) {
           condition.push({ "status": status });
         }
-        else  if(status == 2){
+        else if (status == 2) {
           condition.push({ "status": { [Op.or]: [0, -1] } });
         }
       }
@@ -366,6 +367,7 @@ const getRequestCounts = () => {
 const viewPrevRequests = () => {
   return new Promise(async (resolve, reject) => {
     try {
+      var datetime = getDatetime();
       logger.info(`datetime ::: ${datetime}}`)
       let totalCount = await Request.count({
         where: { "createdAt": { [Op.gte]: datetime } }
